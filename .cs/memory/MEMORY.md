@@ -1,0 +1,2 @@
+- [Session narrative — bogdan-gherghina-erepubliklabs-com (lab notebook)](narrative.bogdan-gherghina-erepubliklabs-com.md): looser-bar work-in-progress; its owner reads it in full on resume, anyone else only the lines the resume digest names; older sections under .cs/narrative-archive/
+- [Reading Teams via chrome-mine](reference_teams-via-chrome-mine.md) — unibuc Teams is scraped in the user's own Chrome through the chrome-mine MCP; no Graph/app registration

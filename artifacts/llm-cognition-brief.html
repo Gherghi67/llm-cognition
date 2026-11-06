@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LLMs &amp; Cognition 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a course brief read top-down — dated action rail first, then your presentation, the project market, grading, the channel feed and the full calendar. */
+:root {
+  --bg: #F3F5F8;
+  --surface: #FFFFFF;
+  --ink: #17202B;
+  --muted: #5A6776;
+  --line: #D8DEE6;
+  --accent: #2E55B8;
+  --accent-soft: #E4EAF9;
+  --warn: #A9520C;
+  --warn-soft: #FBEBDD;
+  --ok: #1D7A4C;
+  --ok-soft: #DDF2E6;
+  --full: #6E7987;
+  --full-soft: #ECEFF3;
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E131A;
+    --surface: #151C25;
+    --ink: #E5EAF0;
+    --muted: #98A4B2;
+    --line: #26313D;
+    --accent: #86A6F2;
+    --accent-soft: #1B2742;
+    --warn: #F0A562;
+    --warn-soft: #36230F;
+    --ok: #63C893;
+    --ok-soft: #122B1F;
+    --full: #9AA5B2;
+    --full-soft: #1D252F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E131A;
+  --surface: #151C25;
+  --ink: #E5EAF0;
+  --muted: #98A4B2;
+  --line: #26313D;
+  --accent: #86A6F2;
+  --accent-soft: #1B2742;
+  --warn: #F0A562;
+  --warn-soft: #36230F;
+  --ok: #63C893;
+  --ok-soft: #122B1F;
+  --full: #9AA5B2;
+  --full-soft: #1D252F;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+
+.wrap { max-width: 980px; margin: 0 auto; padding: 40px 20px 64px; display: grid; gap: 44px; }
+
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .04em; color: var(--muted); text-transform: uppercase; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(34px, 6vw, 50px); line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { margin: 0; max-width: 65ch; color: var(--muted); font-size: 17px; }
+
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-size: 15px; font-weight: 600; margin: 0; }
+section { display: grid; gap: 16px; }
+.sub { margin: 0; color: var(--muted); max-width: 70ch; }
+p { margin: 0; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+
+/* Coming up rail */
+.rail { display: grid; }
+.row { display: grid; grid-template-columns: 112px 1fr auto; gap: 18px; align-items: start; padding: 16px 20px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .when { font-family: var(--font-mono); font-size: 13.5px; line-height: 1.35; font-variant-numeric: tabular-nums; }
+.row .when b { display: block; font-size: 15px; font-weight: 500; }
+.row .when span { color: var(--muted); font-size: 12.5px; }
+.row .what { display: grid; gap: 3px; }
+.row .what p { color: var(--muted); font-size: 14.5px; }
+.row.you { background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--accent); }
+.row.past { opacity: .55; }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 11.5px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.chip.class { color: var(--muted); background: var(--full-soft); }
+.chip.you { color: var(--accent); background: var(--surface); border: 1px solid var(--accent); }
+.chip.due { color: var(--warn); background: var(--warn-soft); }
+.chip.open { color: var(--ok); background: var(--ok-soft); }
+.chip.full { color: var(--full); background: var(--full-soft); }
+.chip.slot { color: var(--warn); background: var(--warn-soft); }
+
+/* Presentation */
+.two { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+.card { padding: 20px 22px; display: grid; gap: 12px; align-content: start; }
+.paper-title { font-family: var(--font-display); font-size: 22px; line-height: 1.25; font-weight: 500; }
+.kv { display: grid; grid-template-columns: max-content 1fr; gap: 6px 14px; font-size: 14.5px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+.team { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.team td { padding: 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.team tr:first-child td { border-top: 0; }
+.team td.role { font-family: var(--font-mono); font-size: 13px; color: var(--muted); width: 54px; }
+.team tr.me td { color: var(--accent); font-weight: 600; }
+.team tr.me td.role { color: var(--accent); }
+.note { font-size: 14px; color: var(--muted); }
+ul.tight { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14.5px; }
+
+/* Topics */
+.callout { padding: 14px 18px; border-radius: 8px; background: var(--warn-soft); color: var(--ink); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); font-size: 15px; }
+.callout b { color: var(--warn); }
+.topics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.topic { padding: 16px 18px; display: grid; gap: 8px; align-content: start; }
+.topic .top { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.topic h3 { font-size: 15.5px; line-height: 1.35; }
+.topic p { font-size: 14px; color: var(--muted); }
+.topic .src { font-size: 13.5px; }
+.topic.is-open { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 13.5px; color: var(--muted); align-items: center; }
+
+/* Grading bar */
+.bar { display: flex; height: 54px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.seg { display: grid; place-content: center; text-align: center; font-size: 12.5px; line-height: 1.2; padding: 0 4px; border-left: 1px solid var(--surface); }
+.seg:first-child { border-left: 0; }
+.seg b { font-family: var(--font-mono); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.s1 { flex: 1; background: var(--full-soft); color: var(--ink); }
+.s2 { flex: 2; background: color-mix(in srgb, var(--accent) 22%, var(--surface)); color: var(--ink); }
+.s3 { flex: 2; background: var(--accent); color: var(--surface); }
+.s4 { flex: 2; background: color-mix(in srgb, var(--warn) 30%, var(--surface)); color: var(--ink); }
+.s5 { flex: 3; background: var(--warn); color: var(--surface); }
+.grade-notes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.grade-notes .card { padding: 16px 18px; gap: 6px; }
+.grade-notes p { font-size: 14px; color: var(--muted); }
+
+/* Feed */
+.feed { display: grid; }
+.post { display: grid; grid-template-columns: 140px 1fr; gap: 18px; padding: 16px 20px; border-top: 1px solid var(--line); }
+.post:first-child { border-top: 0; }
+.post .meta { font-size: 13px; color: var(--muted); display: grid; gap: 2px; align-content: start; }
+.post .meta b { color: var(--ink); font-weight: 600; font-size: 13.5px; }
+.post .meta time { font-family: var(--font-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.post .body { display: grid; gap: 6px; font-size: 15px; }
+.post .body h3 { font-size: 15px; }
+.post .orig { font-size: 13px; color: var(--muted); font-style: italic; }
+.post.stale { opacity: .7; }
+
+/* Schedule table */
+.scroll { overflow-x: auto; }
+table.sched { width: 100%; border-collapse: collapse; font-size: 14.5px; min-width: 560px; }
+.sched th { text-align: left; font-weight: 500; color: var(--muted); font-size: 12.5px; text-transform: uppercase; letter-spacing: .04em; font-family: var(--font-mono); padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.sched td { padding: 11px 16px; border-top: 1px solid var(--line); vertical-align: top; }
+.sched td.d { font-family: var(--font-mono); font-size: 13.5px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sched tr.mine td { background: var(--accent-soft); }
+.sched tr.mine td.d { box-shadow: inset 4px 0 0 var(--accent); }
+.sched tr.done td { color: var(--muted); }
+.tbd { color: var(--muted); }
+
+/* People & links */
+.people { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.person { padding: 16px 18px; display: grid; gap: 4px; }
+.person .r { font-size: 13px; color: var(--muted); }
+.person code { font-family: var(--font-mono); font-size: 13px; word-break: break-all; }
+.links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 24px; font-size: 14.5px; margin: 0; padding: 0; list-style: none; }
+
+footer { font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; max-width: 75ch; }
+
+@media (max-width: 760px) {
+  .two, .topics, .grade-notes, .people, .links { grid-template-columns: 1fr; }
+  .row { grid-template-columns: 1fr; gap: 6px; }
+  .row .chip { justify-self: start; }
+  .post { grid-template-columns: 1fr; gap: 6px; }
+  .bar { height: auto; flex-wrap: wrap; }
+  .seg { padding: 10px 6px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">FMI · University of Bucharest · Thursdays 10:00–12:00 · Room 512 PBT</div>
+  <h1>LLMs &amp; Cognition 2026</h1>
+  <p class="lede">What the course team has posted so far, and what you need to do next. Read from the Teams General channel, the Organization &amp; Scheduling doc and the channel's shared files on 2 November 2026.</p>
+</header>
+
+<section aria-labelledby="h-next">
+  <h2 id="h-next">Coming up</h2>
+  <div class="panel rail">
+    <div class="row">
+      <div class="when"><b>Thu 5 Nov</b><span data-date="2026-11-05">in 3 days</span></div>
+      <div class="what"><h3>Class: Team 3 presents “The Pain Axis”</h3><p><a href="https://arxiv.org/pdf/2609.16247">The Pain Axis: LLMs Represent Self-Directed Harm and Act on It</a>. Classes resume after the EMNLP week.</p></div>
+      <span class="chip class">Class</span>
+    </div>
+    <div class="row">
+      <div class="when"><b>Fri 6 Nov</b><span data-date="2026-11-06">in 4 days</span></div>
+      <div class="what"><h3>Lab moves to room L-202</h3><p>L-508 is blocked this Friday. Group 1's seminar, cancelled on 30 Oct, is to be made up this week.</p></div>
+      <span class="chip class">Lab</span>
+    </div>
+    <div class="row you">
+      <div class="when"><b>Thu 12 Nov</b><span data-date="2026-11-12">in 10 days</span></div>
+      <div class="what"><h3>You present: Team 4, Methodology Expert</h3><p>The role of System 1 and System 2 semantic memory structure in human and LLM biases. Details below.</p></div>
+      <span class="chip you">You</span>
+    </div>
+    <div class="row">
+      <div class="when"><b>Sat 14 Nov</b><span>Anywhere on Earth</span></div>
+      <div class="what"><h3>Project topic, team and preliminary plan due</h3><p>Strict deadline, moved from 31 Oct. No submission means you can't present a project and risk failing the course.</p></div>
+      <span class="chip due">Deadline</span>
+    </div>
+    <div class="row">
+      <div class="when"><b>Thu 19 Nov</b><span>10:00</span></div>
+      <div class="what"><h3>First project progress report</h3><p>Then 3 Dec, 17 Dec, 14 Jan and 24 Jan, each at 10:00. Human-written.</p></div>
+      <span class="chip due">Deadline</span>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-pres">
+  <h2 id="h-pres">Your presentation · 12 November</h2>
+  <div class="two">
+    <div class="panel card">
+      <div class="eyebrow">Paper</div>
+      <a class="paper-title" href="https://arxiv.org/pdf/2604.12816">The role of System 1 and System 2 semantic memory structure in human and LLM biases</a>
+      <dl class="kv">
+        <dt>Your role</dt><dd><b>Methodology Expert (ME)</b></dd>
+        <dt>Focus</dt><dd>The Methods / Experiments sections, including how the data is described.</dd>
+        <dt>Be ready to</dt><dd>Walk through every methodological step, and explain exactly what each figure, plot and model shows and how it was produced.</dd>
+      </dl>
+      <ul class="tight">
+        <li>Everyone on the team reads the whole paper; roles only set what you lead on.</li>
+        <li>Prepare a short joint slide deck. The session is a class discussion, and extra points go to whoever builds slides or leads it.</li>
+        <li>Upload slides, code and anything else to <a href="https://unibucro0.sharepoint.com/:f:/r/sites/LLMsandCognition2026/Shared%20Documents/General/Semester%20Presentations?d=w8b9c45352aa04ea1b1a5b2b4c23e7565&amp;csf=1&amp;web=1&amp;e=jFaMfZ">Semester Presentations</a>. Earlier teams made folders named “Team 1 - Attention Is All You Need” and “Team 2 - The LLM Language Network”. No folder exists yet for yours.</li>
+      </ul>
+    </div>
+    <div class="panel card">
+      <div class="eyebrow">Team 4</div>
+      <table class="team">
+        <tbody>
+          <tr><td class="role">PF</td><td>Alexandru Zotec<br><span class="note">Problem framer</span></td></tr>
+          <tr class="me"><td class="role">ME</td><td>Bogdan Gherghina (you)<br><span class="note">Methodology expert</span></td></tr>
+          <tr><td class="role">ME</td><td>Mihnea-Andrei Velcea<br><span class="note">Methodology expert</span></td></tr>
+          <tr><td class="role">CO</td><td>Călin-Cristian Axinte<br><span class="note">Coder: find and run the code, prepare a demo</span></td></tr>
+          <tr><td class="role">DS</td><td>Andrei Dragotă<br><span class="note">Data scientist: dataset description and EDA</span></td></tr>
+          <tr><td class="role">R</td><td>Elena Larisa Vieriu<br><span class="note">Results interpreter</span></td></tr>
+        </tbody>
+      </table>
+      <p class="note">Nobody is assigned Challenger (limitations and future work). You share ME with Mihnea-Andrei, so agree on who leads which part of the methods. Roles can be swapped within the team.</p>
+    </div>
+  </div>
+  <p class="note">Graded per person: Zero 0, Insufficient 0.5, Sufficient 1, Good 1.5, Very Good 2. Failing basic questions about your own part costs 0.5. Skipping the presentation loses these 2 points (20% of the grade), with no make-up in the retake session.</p>
+</section>
+
+<section aria-labelledby="h-proj">
+  <h2 id="h-proj">Final project · pick a topic by 14 November</h2>
+  <div class="callout"><b>You're not on a project team yet.</b> Your name isn't in any of the team comments on the Projects tab of the doc. Teams are 3 or 4 students. To claim a topic, comment your team on the project's title in the doc. If two teams take the same topic, they compete for the top score and the better team gets 1 bonus point.</div>
+  <div class="legend">
+    <span>Status from the doc's comments on 2 Nov:</span>
+    <span class="chip open">Open</span>
+    <span class="chip slot">1 place left</span>
+    <span class="chip full">Taken</span>
+  </div>
+  <div class="topics">
+    <article class="panel topic is-open">
+      <div class="top"><h3>Transformer layers and attention-head similarity</h3><span class="chip open">Open</span></div>
+      <p>Extend the paper with space-similarity maps per task (especially reasoning tasks) and for BERT models, look at attention heads the same way, and try models with newer attention architectures.</p>
+      <a class="src" href="https://ojs.aaai.org/index.php/AAAI/article/view/34708">Transformer Layers as Painters</a>
+    </article>
+    <article class="panel topic is-open">
+      <div class="top"><h3>fMRI representational similarity with LLM embeddings</h3><span class="chip open">Open</span></div>
+      <p>Redo the experiments on the same fMRI data with LLM-based contextual embeddings, and compare similarity-matrix methods: Pearson, rank correlation, Procrustes, CKA, kernelized RSA.</p>
+      <a class="src" href="https://www.nature.com/articles/nature17637">Natural speech reveals the semantic maps that tile human cerebral cortex</a>
+    </article>
+    <article class="panel topic is-open">
+      <div class="top"><h3>Hessian Null Space Continuation on a small network</h3><span class="chip open">Open</span></div>
+      <p>Train a small MLP or tiny RNN, estimate low-curvature directions of the loss, and test whether moving along them changes hidden representations while predictions stay the same. The same heading also lists: train <a href="https://babylm.github.io/">BabyLM</a> models on English and Romanian and evaluate on <a href="https://arxiv.org/abs/2504.02768">multiBLiMP</a>.</p>
+      <a class="src" href="https://arxiv.org/abs/2609.38081">Traversing the solution space of neural networks with HNC</a>
+    </article>
+    <article class="panel topic is-open">
+      <div class="top"><h3>Identifying introspection from the inside</h3><span class="chip open">Open</span></div>
+      <p>Reproduce the paper, build a new multilingual dataset of decisions, and test how models handle the decisions across languages.</p>
+      <a class="src" href="https://arxiv.org/abs/2610.07186">Identifying Introspection From the Inside</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>LLMs learn better in-context from rules than from examples</h3><span class="chip slot">1 place left</span></div>
+      <p>Compare rule-based and example-based prompting on 2 or 3 small tasks with two open models, testing on unseen combinations, then add linear probes. One team of 3 so far.</p>
+      <a class="src" href="https://arxiv.org/abs/2609.03213">Paper on arXiv</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Syntactic bootstrapping of novel verb meanings</h3><span class="chip full">2 teams</span></div>
+      <p>Build novel-verb examples with syntactic vs lexical cues and score pretrained LMs on held-out frames. Two teams (4 and 3) are already competing.</p>
+      <a class="src" href="https://direct.mit.edu/opmi/article/doi/10.1162/OPMI.a.391/138879/The-Structural-Sources-of-Verb-Meanings-Revisited">The Structural Sources of Verb Meanings Revisited</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Multilingual fMRI encoding across languages</h3><span class="chip full">Taken · 4</span></div>
+      <p>Reproduce Study I on as many languages as possible, Romanian included, with other embeddings and non-linear encoders.</p>
+      <a class="src" href="https://www.biorxiv.org/content/10.1101/2025.02.01.636044v2">Multilingual computational models reveal shared brain responses to 21 languages</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Language-invariant processing in cross-lingual brain alignment</h3><span class="chip full">Taken · 4</span></div>
+      <p>Find which text properties (complexity, POS, cognates, valence) make cross-lingual brain encoding succeed.</p>
+      <a class="src" href="https://www.biorxiv.org/content/10.1101/2025.02.01.636044v2">Same fMRI paper</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Multimodal semantics and human judgements</h3><span class="chip full">Taken · 4</span></div>
+      <p>Language, image and multimodal models against human semantic-attribute judgements, plus RSA to test the platonic representation hypothesis.</p>
+      <a class="src" href="https://aclanthology.org/2025.findings-acl.1240/">Seeing What Tastes Good</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Human and LLM attention across languages</h3><span class="chip full">Taken · 4</span></div>
+      <p>Compare eye-tracking attention with LLM attention cross-lingually, and find where they agree and disagree most.</p>
+      <a class="src" href="https://aclanthology.org/2023.findings-eacl.49.pdf">Cross-Lingual Transfer of Cognitive Processing Complexity</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>EEG representational similarity with LLM embeddings</h3><span class="chip full">Taken · 4</span></div>
+      <p>The fMRI RSA idea above, applied to EEG data.</p>
+      <a class="src" href="https://onlinelibrary.wiley.com/doi/pdf/10.1111/psyp.13976">Neural correlates of word representation vectors</a>
+    </article>
+    <article class="panel topic">
+      <div class="top"><h3>Research from scratch</h3><span class="chip class">Ask</span></div>
+      <p>For students who can commit all semester: weekly check-ins, heavy data collection, aiming at a paper for an ACL conference. Contact Ana or Sergiu.</p>
+    </article>
+  </div>
+  <div class="two">
+    <div class="panel card">
+      <h3>What to submit by 14 Nov</h3>
+      <p class="note">A topic and a preliminary plan covering:</p>
+      <ul class="tight">
+        <li>related work and papers on the subject</li>
+        <li>available data, its size, and a first exploratory analysis</li>
+        <li>modelling strategies and evaluation metrics you can afford with your compute</li>
+        <li>expected results and evaluation (qualitative, automatic, model comparisons)</li>
+        <li>open questions and bottlenecks</li>
+      </ul>
+      <p class="note">If the paper needs compute you don't have, say so as a limitation and reproduce the effect on smaller models that run on Google Colab.</p>
+    </div>
+    <div class="panel card">
+      <h3>Final deliverables</h3>
+      <ul class="tight">
+        <li>Report of 4–8 pages in the <a href="https://www.overleaf.com/latex/templates/association-for-computational-linguistics-acl-conference/jvxskxpnznfj">ACL Overleaf template</a>, not anonymous</li>
+        <li>A <b>Contributions</b> section after the Conclusions and before the Bibliography, stating what each member did</li>
+        <li>An <b>LLM disclosure</b> section: which models and versions you used, how, and the prompts</li>
+        <li>Implementation code and a slide presentation</li>
+      </ul>
+      <p class="note">The instructors ask you not to write the report with LLMs, and unclear writing can cost points even when the technical work is sound. They recommend <a href="https://hackingsemantics.xyz/2024/writing/">this post</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section aria-labelledby="h-grade">
+  <h2 id="h-grade">How the 10 points are made up</h2>
+  <div class="bar" role="img" aria-label="Grading: 1 point free, 2 points lab assignments, 2 points article presentation, 2 points project progress reports, 3 points final project deliverables.">
+    <div class="seg s1"><b>1</b>Free</div>
+    <div class="seg s2"><b>2</b>Labs</div>
+    <div class="seg s3"><b>2</b>Paper presentation</div>
+    <div class="seg s4"><b>2</b>Progress reports</div>
+    <div class="seg s5"><b>3</b>Project deliverables</div>
+  </div>
+  <div class="grade-notes">
+    <div class="panel card"><h3>Labs · 2 points</h3><p>Four homework assignments, equally weighted. Late work loses 1 point per week. Seminar activity also counts. Attendance isn't graded.</p></div>
+    <div class="panel card"><h3>Paper presentation · 2 points</h3><p>Your 12 November session. Graded per person and can't be made up in the retake.</p></div>
+    <div class="panel card"><h3>Project · 5 points</h3><p>2 for the progress reports, 3 for the report, code and slides: Zero 0, Sufficient 1, Good 2, Very Good 3.</p></div>
+  </div>
+</section>
+
+<section aria-labelledby="h-feed">
+  <h2 id="h-feed">General channel posts</h2>
+  <p class="sub">All 7 posts in the channel, newest first. Romanian posts are translated, with the original below. Assignments and Classwork are still empty.</p>
+  <div class="panel feed">
+    <article class="post">
+      <div class="meta"><b>Claudiu Creangă</b><time datetime="2026-11-01T23:27">Sun 1 Nov · 23:27</time></div>
+      <div class="body"><p>L-508 will be blocked on Friday, so the lab meets in <b>L-202</b>.</p><p class="orig">“Buna, Am fost anuntat ca L-508 va fi blocat vineri asa ca ne vom desfasura activitatea in L-202.”</p></div>
+    </article>
+    <article class="post">
+      <div class="meta"><b>Ana-Sabina Uban</b><time datetime="2026-10-31T16:55">Sat 31 Oct · 16:55</time></div>
+      <div class="body">
+        <h3>EMNLP materials</h3>
+        <p>Recordings from the conference to watch in your own time, in place of the cancelled class:</p>
+        <ul class="tight">
+          <li><a href="https://us06web.zoom.us/rec/play/DAGQdEbcemJJWuf70JyEcVMoc4Wo3SsTtvDoYLIqYl44b1T9hWqDD2Pr2SWcBhEi8hDZvhHWimW57ATy._8W6w7uBCv8ZaXie?accessLevel=meeting&amp;canPlayFromShare=true&amp;from=share_recording_detail&amp;startTime=1793173695000&amp;oldStyle=true&amp;componentName=rec-play&amp;originRequestUrl=https%3A%2F%2Fus06web.zoom.us%2Frec%2Fshare%2FhUWGnpr1fDrP68x-M3bN5HjNfRONrmtrWPFMLZm2hi7lQh7X5-WlCck1bgCFjIdW.HqqXoiY8OOinfLYf%3FstartTime%3D1793173695000">Tutorial on brain alignment, decoding and encoding</a></li>
+          <li><a href="https://us06web.zoom.us/rec/play/WCRyIkoA4ZIAOQh2lmDh85C5Dmr6TqSHAgWIg-MaMvcbvkAoEf3SvnVpidd-JrGyVGZdymxB2ssWYcKS.1AmmCTTFdYHQSvmW?accessLevel=meeting&amp;canPlayFromShare=true&amp;from=share_recording_detail&amp;startTime=1793258352000&amp;oldStyle=true&amp;componentName=rec-play&amp;originRequestUrl=https%3A%2F%2Fus06web.zoom.us%2Frec%2Fshare%2FVCDER3JqSyvd3Du4Upk-dmV_ZjxFJ43Y5nOJM9sJ-S9N3BZmtblmIcZzgUqoWIdn.0Suu70jcOAFXEyE3%3FstartTime%3D1793258352000">BabyLM workshop keynote</a> on how children learn language through communicative feedback, from 01:19:00</li>
+          <li><a href="https://us06web.zoom.us/rec/play/byBKEnTtCR2ZWxpXmFPXRTy3W8_dvTMDtHVtWVi3tbPHLXHRr_BKz1ib84zF3ayFiODGfRRkOIAy2e8B._0RKDrzIoqrTr_2x?accessLevel=meeting&amp;canPlayFromShare=true&amp;from=share_recording_detail&amp;startTime=1793258649000&amp;oldStyle=true&amp;componentName=rec-play&amp;originRequestUrl=https%3A%2F%2Fus06web.zoom.us%2Frec%2Fshare%2Fypp5h9t0m7YdPQlH39A97eVn5oAA3RUS-fg_1KA4o4Vpb__Ok24foGs08ThY6VDB.0fpAA0u6Y9nOSxuj%3FstartTime%3D1793258649000">BlackBoxNLP keynote</a> on post-training (SFT vs RL) and its effects, from 00:47:30</li>
+        </ul>
+      </div>
+    </article>
+    <article class="post">
+      <div class="meta"><b>Claudiu Creangă</b><time datetime="2026-10-30T12:00">Fri 30 Oct · 12:00</time></div>
+      <div class="body"><h3>Group 1: today's seminar is cancelled</h3><p>He came back from the conference sick. The seminar will be made up next week.</p><p class="orig">“Buna, din pacate m-am intors ieri f racit de la conferinta si nu pot tine seminarul. Am sa va rog sa recuperam saptamana viitoare.”</p></div>
+    </article>
+    <article class="post">
+      <div class="meta"><b>Ana-Sabina Uban</b><time datetime="2026-10-29T03:13">Thu 29 Oct · 03:13</time></div>
+      <div class="body"><h3>No class on 29 October</h3><p>The instructors are away at EMNLP. Conference materials to follow.</p></div>
+    </article>
+    <article class="post stale">
+      <div class="meta"><b>Sergiu Nisioi</b><time datetime="2026-10-22T17:39">Thu 22 Oct · 17:39</time></div>
+      <div class="body"><h3>Politics of Technology</h3><p>Open meeting with the CUTRA editorial collective (<a href="https://cutra.ro/">cutra.ro</a>) on Fri 23 Oct, 13:00–15:00, room S-214 at FMI. Topics included AI and work culture, technology and militarization, and mental health. Already past.</p></div>
+    </article>
+    <article class="post stale">
+      <div class="meta"><b>Claudiu Creangă</b><time datetime="2026-10-19T22:29">Mon 19 Oct · 22:29</time></div>
+      <div class="body"><p>Shared, because several students asked: <a href="https://academictorrents.com/details/ba051999301b109eab37d16f027b3f49ade2de13">an item on Academic Torrents</a>.</p><p class="orig">“Pt ca mi l-a cerut mai multa lume”</p></div>
+    </article>
+    <article class="post stale">
+      <div class="meta"><b>Claudiu Creangă</b><time datetime="2026-10-16T18:03">Fri 16 Oct · 18:03</time></div>
+      <div class="body"><p>He'd posted his “running late” note in the 2025 channel by mistake.</p><p class="orig">“Acum vad ca scrisesem pe canalul de 2025 ca intarzii. Sorry”</p></div>
+    </article>
+  </div>
+</section>
+
+<section aria-labelledby="h-sched">
+  <h2 id="h-sched">Presentation calendar</h2>
+  <div class="panel scroll">
+    <table class="sched">
+      <thead><tr><th scope="col">Date</th><th scope="col">Session</th><th scope="col">Paper</th></tr></thead>
+      <tbody>
+        <tr class="done"><td class="d">8 Oct</td><td>Introductory class</td><td><span class="tbd">Slides: Intro LLMs &amp; cognition.pdf in Shared files</span></td></tr>
+        <tr class="done"><td class="d">15 Oct</td><td>Team 1</td><td><a href="https://proceedings.neurips.cc/paper_files/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf">Attention Is All You Need</a></td></tr>
+        <tr class="done"><td class="d">22 Oct</td><td>Team 2</td><td><a href="https://aclanthology.org/2025.naacl-long.544.pdf">The LLM Language Network</a></td></tr>
+        <tr class="done"><td class="d">29 Oct</td><td>No class (EMNLP)</td><td><a href="https://docs.google.com/spreadsheets/d/1aXGTy_7Xeh-OXIs3iJSbDpUsZ6YhbfA76b17kBZH0Yk/edit?gid=943432490#gid=943432490">EMNLP paper list</a></td></tr>
+        <tr><td class="d">5 Nov</td><td>Team 3</td><td><a href="https://arxiv.org/pdf/2609.16247">The Pain Axis</a></td></tr>
+        <tr class="mine"><td class="d">12 Nov</td><td><b>Team 4 · you</b></td><td><a href="https://arxiv.org/pdf/2604.12816">System 1 and System 2 semantic memory structure in human and LLM biases</a></td></tr>
+        <tr><td class="d">19 Nov</td><td>Team 5</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">26 Nov</td><td>Team 6</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">3 Dec</td><td>Team 7</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">10 Dec</td><td>Team 8</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">17 Dec</td><td>Team 9</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">14 Jan</td><td>Team 10</td><td class="tbd">To be announced</td></tr>
+        <tr><td class="d">21 Jan</td><td>Project discussions</td><td class="tbd">Final projects</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">Team numbers after Team 2 follow the order of the schedule; the doc itself only names dates.</p>
+</section>
+
+<section aria-labelledby="h-people">
+  <h2 id="h-people">People and links</h2>
+  <div class="people">
+    <div class="panel person"><h3>Ana-Sabina Uban</h3><span class="r">Course, weeks 1–7</span><code>auban@fmi.unibuc.ro</code></div>
+    <div class="panel person"><h3>Sergiu Nisioi</h3><span class="r">Course, weeks 8–14</span><code>sergiu.nisioi@unibuc.ro</code></div>
+    <div class="panel person"><h3>Claudiu Creangă</h3><span class="r">Labs</span><code>claudiu.creanga@s.unibuc.ro</code></div>
+  </div>
+  <ul class="links">
+    <li><a href="https://docs.google.com/document/d/1UVS7hEYwRv2xeLq87nkmQ0DYRMKLrR20aRYtQhHxJyU/edit?usp=sharing">Organization &amp; Scheduling doc</a> (course rules, projects tab)</li>
+    <li><a href="https://unibucro0.sharepoint.com/:f:/r/sites/LLMsandCognition2026/Shared%20Documents/General/Semester%20Presentations?d=w8b9c45352aa04ea1b1a5b2b4c23e7565&amp;csf=1&amp;web=1&amp;e=jFaMfZ">Semester Presentations folder</a></li>
+    <li><a href="https://www.overleaf.com/latex/templates/association-for-computational-linguistics-acl-conference/jvxskxpnznfj">ACL report template</a></li>
+    <li><a href="https://perceiving-systems.blog/en/post/writing-a-good-scientific-paper">Writing a Good Scientific Paper</a></li>
+    <li><a href="https://maxwellforbes.com/posts/how-to-get-a-paper-accepted/">How to Get Your Paper Accepted</a></li>
+    <li><a href="https://www.alignmentforum.org/posts/eJGptPbbFPZGLpjsp/highly-opinionated-advice-on-how-to-write-ml-papers">Highly Opinionated Advice on How to Write ML Papers</a></li>
+  </ul>
+  <p class="note">Also in the channel's shared files: a read-only Class Materials folder and a Project Brief Loop page added by a student on 19 Oct.</p>
+</section>
+
+<footer>
+  Read from Microsoft Teams (LLMs and Cognition 2026, General channel: Posts, Shared, Organization &amp; Scheduling) and the linked Google Doc on Monday 2 November 2026, around 23:00 Bucharest time. Project claims reflect the doc's comments at that moment and will change. The doc's retake note still says to contact the instructors before 20 July 2026, which looks carried over from last year's version.
+</footer>
+
+</div>
+<script>
+(function () {
+  try {
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    document.querySelectorAll('[data-date]').forEach(function (el) {
+      var d = new Date(el.getAttribute('data-date') + 'T00:00:00');
+      var n = Math.round((d - today) / 86400000);
+      var label = n === 0 ? 'today' : n === 1 ? 'tomorrow' : n > 1 ? 'in ' + n + ' days' : n === -1 ? 'yesterday' : (-n) + ' days ago';
+      el.textContent = label;
+      if (n < 0) { var row = el.closest('.row'); if (row) row.classList.add('past'); }
+    });
+  } catch (e) { /* keep the static labels */ }
+})();
+</script>
+</body>
+</html>
