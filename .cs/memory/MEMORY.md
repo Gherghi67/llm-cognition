@@ -1,2 +1,4 @@
 - [Session narrative — bogdan-gherghina-erepubliklabs-com (lab notebook)](narrative.bogdan-gherghina-erepubliklabs-com.md): looser-bar work-in-progress; its owner reads it in full on resume, anyone else only the lines the resume digest names; older sections under .cs/narrative-archive/
 - [Reading Teams via chrome-mine](reference_teams-via-chrome-mine.md) — unibuc Teams is scraped in the user's own Chrome through the chrome-mine MCP; no Graph/app registration
+- [LLMs & Cognition labs repo](reference_llm-cognition-labs-repo.md) — lab notebooks at github.com/bucuram/llms-and-cognition-labs; Google Form submission needs sign-in; notebook deadlines are 2025 text
+- [No comments in lab solution code](feedback_lab-code-no-comments.md) — user had code comments stripped from lab2 solutions; explain in markdown cells instead

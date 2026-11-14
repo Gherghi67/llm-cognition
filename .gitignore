@@ -42,3 +42,6 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Python virtualenv for the labs (uv venv --python 3.12 .venv)
+.venv/
