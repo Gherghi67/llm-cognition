@@ -4,3 +4,5 @@
 - [Bash grep is ugrep](project_bash-grep-is-ugrep.md) — `.{0,N}` context patterns fail ("exceeds complexity limits"); use python re for match context
 - [The user's "ADHD skill"](reference_i-have-adhd-skill.md) — means skills.sh ayghri/i-have-adhd; not installed, read SKILL.md via gh api
 - [Course project: transformer layers](project_course-project-transformer-layers.md) — Painters-paper project report, its ADHD copy and code links; submit the original, never the LLM copy
+- [LLMs & Cognition labs repo](reference_llm-cognition-labs-repo.md): "take labN from the github" = github.com/bucuram/llms-and-cognition-labs; notebook deadlines are 2025's, confirm on Teams
+- [Lab notebook environment](project_lab-notebook-env.md): labs pin torch 2.0.1, so use a Python 3.11 uv venv (system python is 3.15); run with nbconvert --allow-errors
