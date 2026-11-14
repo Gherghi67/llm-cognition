@@ -23,3 +23,4 @@
 {"ts":"2026-11-14T14:33:28Z","event":"ended","source":"prompt_input_exit","session_id":"fe2f520e-f50d-4f4b-8ca5-f1e419636f70","engine":"claude","run_id":"8b7ee476-73b0-4e06-9db1-aff86c022a4b","branch":"main"}
 {"ts":"2026-11-14T15:32:21Z","event":"rotated","engine":"claude","run_id":"87727ba1-7f6e-4f30-9c5c-ba61cfffb698","from":"fe2f520e-f50d-4f4b-8ca5-f1e419636f70","to":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","reason":"declined-resume"}
 {"ts":"2026-11-14T15:32:21Z","event":"started","engine":"claude","run_id":"87727ba1-7f6e-4f30-9c5c-ba61cfffb698","role":"lead","source":"startup","session_id":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","branch":"main"}
+{"ts":"2026-11-14T15:34:56Z","event":"feature-integrated","task":"lab1","sha":"c95d6232a694c511a96ee17f9ee2eb592ece916b","result":"4940242a681c1eb07e713b1139e2f35efb7caa56"}
