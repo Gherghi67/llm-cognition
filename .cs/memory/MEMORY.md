@@ -1,2 +1,4 @@
 - [Session narrative — bogdan-gherghina-erepubliklabs-com (lab notebook)](narrative.bogdan-gherghina-erepubliklabs-com.md): looser-bar work-in-progress; its owner reads it in full on resume, anyone else only the lines the resume digest names; older sections under .cs/narrative-archive/
 - [Reading Teams via chrome-mine](reference_teams-via-chrome-mine.md) — unibuc Teams is scraped in the user's own Chrome through the chrome-mine MCP; no Graph/app registration
+- [LLMs & Cognition labs repo](reference_llm-cognition-labs-repo.md): "take labN from the github" = github.com/bucuram/llms-and-cognition-labs; notebook deadlines are 2025's, confirm on Teams
+- [Lab notebook environment](project_lab-notebook-env.md): labs pin torch 2.0.1, so use a Python 3.11 uv venv (system python is 3.15); run with nbconvert --allow-errors
