@@ -42,3 +42,10 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# Python / Jupyter (course labs)
+.venv/
+__pycache__/
+.ipynb_checkpoints/
+# Downloaded by lab notebooks at runtime
+the-verdict.txt
