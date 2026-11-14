@@ -4,9 +4,10 @@
 - [Bash grep is ugrep](project_bash-grep-is-ugrep.md) — `.{0,N}` context patterns fail ("exceeds complexity limits"); use python re for match context
 - [The user's "ADHD skill"](reference_i-have-adhd-skill.md) — means skills.sh ayghri/i-have-adhd; not installed, read SKILL.md via gh api
 - [Course project: transformer layers](project_course-project-transformer-layers.md) — Painters-paper report, team, 03 Dec first progress report, ADHD copy/PDF and task doc; submit the original, never the LLM copy
-- [LLMs & Cognition labs repo](reference_llm-cognition-labs-repo.md): "take labN from the github" = github.com/bucuram/llms-and-cognition-labs; notebook deadlines are 2025's, confirm on Teams
+- [LLMs & Cognition labs repo](reference_llm-cognition-labs-repo.md): "take labN from the github" = github.com/bucuram/llms-and-cognition-labs; Google Form submission needs sign-in; notebook deadlines are 2025's, confirm on Teams
 - [Lab notebook environment](project_lab-notebook-env.md): labs pin torch 2.0.1, so use a Python 3.11 uv venv (system python is 3.15); run with nbconvert --allow-errors
 - [Finishing features with tracked .cs](project_finishing-features-tracked-cs.md) — /finish here hits summary.md/README.md conflicts, MEMORY.md merge=ours drops and timeline dirt; the fix order is in the entry
 - [docx → PDF via Pages](project_docx-to-pdf-via-pages.md) — Word 16.115 AppleScript save as fails (-1708), no pandoc/LibreOffice; Pages export works
 - [Claude Docs PDF pagination](project_claude-docs-pdf-pagination.md) — docs PDF export can't keep tables on one page or page-break; use headless Chrome on own HTML; textutil docx breaks tables
 - [Team plans by task](feedback_team-plans-by-task.md) — course team plans list tasks for the whole team; never per-person owners
+- [No comments in lab solution code](feedback_lab-code-no-comments.md) — user had code comments stripped from lab2 solutions; explain in markdown cells instead
