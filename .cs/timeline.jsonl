@@ -26,3 +26,13 @@
 {"ts":"2026-11-14T15:32:21Z","event":"rotated","engine":"claude","run_id":"87727ba1-7f6e-4f30-9c5c-ba61cfffb698","from":"fe2f520e-f50d-4f4b-8ca5-f1e419636f70","to":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","reason":"declined-resume"}
 {"ts":"2026-11-14T15:32:21Z","event":"started","engine":"claude","run_id":"87727ba1-7f6e-4f30-9c5c-ba61cfffb698","role":"lead","source":"startup","session_id":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","branch":"main"}
 {"ts":"2026-11-14T15:34:56Z","event":"feature-integrated","task":"lab1","sha":"c95d6232a694c511a96ee17f9ee2eb592ece916b","result":"4940242a681c1eb07e713b1139e2f35efb7caa56"}
+{"ts":"2026-11-14T15:36:58Z","event":"feature-integrated","task":"lab1","sha":"5044783552b67e8a899669827d1c030da0641ea0","result":"9cc0467457984cafde1a555fe7b9f5e0739b79c9"}
+{"ts":"2026-11-14T15:37:05Z","event":"worktree-retired","task":"lab1"}
+{"ts":"2026-11-14T15:40:45Z","event":"ended","source":"prompt_input_exit","session_id":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","engine":"claude","run_id":"87727ba1-7f6e-4f30-9c5c-ba61cfffb698","branch":"main"}
+{"ts":"2026-11-14T16:33:58Z","event":"rotated","engine":"claude","run_id":"27ee6e19-4825-4979-be53-aa0481a0f5bd","from":"9e4e30f5-9eca-4f5d-bea9-fa5075f16de1","to":"0f4662d1-814e-492e-b153-cd7f677da902","reason":"declined-resume"}
+{"ts":"2026-11-14T16:33:58Z","event":"started","engine":"claude","run_id":"27ee6e19-4825-4979-be53-aa0481a0f5bd","role":"lead","source":"startup","session_id":"0f4662d1-814e-492e-b153-cd7f677da902","branch":"main"}
+{"ts":"2026-11-14T17:55:46Z","event":"ended","source":"prompt_input_exit","session_id":"0f4662d1-814e-492e-b153-cd7f677da902","engine":"claude","run_id":"27ee6e19-4825-4979-be53-aa0481a0f5bd","branch":"main"}
+{"ts":"2026-11-14T18:17:24Z","event":"started","engine":"claude","run_id":"d34ec205-4ff6-4e0d-a746-e49ffaed144a","role":"lead","source":"resume","session_id":"0f4662d1-814e-492e-b153-cd7f677da902","branch":"main"}
+{"ts":"2026-11-14T18:17:51Z","event":"ended","source":"clear","session_id":"0f4662d1-814e-492e-b153-cd7f677da902","engine":"claude","run_id":"d34ec205-4ff6-4e0d-a746-e49ffaed144a","branch":"main"}
+{"ts":"2026-11-14T18:17:52Z","event":"rotated","engine":"claude","run_id":"d34ec205-4ff6-4e0d-a746-e49ffaed144a","from":"0f4662d1-814e-492e-b153-cd7f677da902","to":"7248cbb7-959d-4940-9c39-0c81d0bf244d","reason":"rebind"}
+{"ts":"2026-11-14T18:17:52Z","event":"started","engine":"claude","run_id":"d34ec205-4ff6-4e0d-a746-e49ffaed144a","role":"lead","source":"clear","session_id":"7248cbb7-959d-4940-9c39-0c81d0bf244d","branch":"main"}
