@@ -15,3 +15,5 @@ The user's Teams account is a University of Bucharest student account (`bogdan.g
 **Scraping tips:** channel posts are under `[data-tid="channel-pane-message"]`, with `[data-tid="timestamp"]` title holding the full date. Assignments, Classwork and Shared are cross-origin iframes, so read them with take_snapshot. Embedded Google Docs read cleanly via `/document/d/<id>/mobilebasic` in a background tab. Close any tab you open. `filePath` outputs outside the workspace are refused.
 
 Classes on that account: FMI 2026-2027, Deontology FMI Master, LLMs and Cognition 2026, Foundations of NLP 2026-2027.
+
+**claude.ai Docs the docs connector refuses:** a Claude Doc owned by the user's personal claude.ai account (outside the erepubliklabs org) returns `access` denied to the docs tools, but it opens in that Chrome. Open it with `new_page` (background) and `take_snapshot` with a `filePath` inside the workspace. The doc body sits in nested iframes, so `evaluate_script` on the top page only sees the title; the snapshot has the full text and links. Worked on 13 Nov 2026.

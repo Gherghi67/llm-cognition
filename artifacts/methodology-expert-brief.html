@@ -1,0 +1,632 @@
+<title>Team 4 Methodology Brief</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,500;6..72,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Layout idea: a single-column briefing that reads like the method itself. The multilayer network first, then the eight steps in order, the figure map, the split, and the questions you'll be asked. Matches the LLMs & Cognition course brief. */
+:root {
+  --bg: #F3F5F8;
+  --surface: #FFFFFF;
+  --ink: #17202B;
+  --muted: #5A6776;
+  --line: #D8DEE6;
+  --accent: #2E55B8;
+  --accent-soft: #E4EAF9;
+  --l1: #B86E0E;        /* free associations, System 1 */
+  --l1-soft: #FBEEDC;
+  --l2: #2E55B8;        /* definitions, System 2 */
+  --l3: #7646B0;        /* categories, System 2 */
+  --l3-soft: #EFE7F9;
+  --font-display: "Newsreader", "Iowan Old Style", Georgia, serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E131A;
+    --surface: #151C25;
+    --ink: #E5EAF0;
+    --muted: #98A4B2;
+    --line: #26313D;
+    --accent: #86A6F2;
+    --accent-soft: #1B2742;
+    --l1: #F0AE55;
+    --l1-soft: #33240F;
+    --l2: #86A6F2;
+    --l3: #B897EC;
+    --l3-soft: #261C38;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E131A;
+  --surface: #151C25;
+  --ink: #E5EAF0;
+  --muted: #98A4B2;
+  --line: #26313D;
+  --accent: #86A6F2;
+  --accent-soft: #1B2742;
+  --l1: #F0AE55;
+  --l1-soft: #33240F;
+  --l2: #86A6F2;
+  --l3: #B897EC;
+  --l3-soft: #261C38;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(2.1rem, 5vw, 2.9rem); line-height: 1.08; letter-spacing: -0.01em; }
+h2 { font-size: 1.65rem; line-height: 1.2; }
+h3 { font-size: 1.2rem; line-height: 1.3; }
+p { margin: 0; }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+section { display: flex; flex-direction: column; gap: 18px; }
+.section-head { display: flex; flex-direction: column; gap: 6px; }
+.section-head p { color: var(--muted); max-width: 65ch; }
+
+/* Hero */
+.hero { display: flex; flex-direction: column; gap: 16px; }
+.lede { font-size: 1.15rem; max-width: 62ch; }
+.paper {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.paper-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 500; line-height: 1.3; }
+.paper-meta { color: var(--muted); font-size: 0.92rem; }
+
+/* Network diagrams */
+.nets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.net {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.net svg { width: 100%; height: auto; display: block; }
+.net figcaption { font-size: 0.92rem; }
+.net figcaption strong { font-weight: 600; }
+.net figure { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.pl { stroke-width: 1.5; }
+.pl-1 { fill: var(--l1); fill-opacity: 0.16; stroke: var(--l1); }
+.pl-2 { fill: var(--l2); fill-opacity: 0.14; stroke: var(--l2); }
+.pl-3 { fill: var(--l3); fill-opacity: 0.16; stroke: var(--l3); }
+.pl-m { fill: url(#merge); fill-opacity: 0.2; stroke: var(--l3); stroke-dasharray: 5 3; }
+.s-1 { stop-color: var(--l1); }
+.s-3 { stop-color: var(--l3); }
+.edge { stroke: var(--ink); stroke-opacity: 0.55; stroke-width: 1.4; }
+.link { stroke: var(--muted); stroke-opacity: 0.7; stroke-width: 1; stroke-dasharray: 2 3; }
+.node { fill: var(--surface); stroke: var(--ink); stroke-width: 1.4; }
+.lab { fill: var(--ink); font-family: var(--font-body); font-size: 12.5px; font-weight: 500; }
+.sub { fill: var(--muted); font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.04em; }
+.sub-1 { fill: var(--l1); }
+.sub-2 { fill: var(--l2); }
+.sub-3 { fill: var(--l3); }
+.why { max-width: 65ch; }
+
+/* Numbers strip */
+.numbers { display: flex; flex-wrap: wrap; gap: 8px; }
+.num {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 4px 9px;
+  font-variant-numeric: tabular-nums;
+}
+.num b { font-weight: 500; color: var(--accent); }
+
+/* Steps */
+.part { display: flex; flex-direction: column; gap: 14px; }
+.part-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.part-head .eyebrow { margin-left: auto; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.step { display: grid; grid-template-columns: 2.2rem minmax(0, 1fr); gap: 4px 12px; }
+.step-n {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  font-variant-numeric: tabular-nums;
+}
+.step-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding-top: 4px; }
+.step-body h3 { font-family: var(--font-body); font-size: 1rem; font-weight: 600; }
+.step-body p { max-width: 65ch; }
+.params { display: flex; flex-wrap: wrap; gap: 6px; }
+.result {
+  background: var(--accent-soft);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.result .eyebrow { color: var(--accent); }
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-family: var(--font-mono); font-weight: 500; font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+td.n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+th.n { text-align: right; }
+td.item { white-space: nowrap; font-weight: 600; }
+.layer { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.dot-1 { background: var(--l1); }
+.dot-2 { background: var(--l2); }
+.dot-3 { background: var(--l3); }
+.grp td { border-top: 1px solid var(--line); }
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.tag-a { background: var(--l1-soft); color: var(--l1); }
+.tag-b { background: var(--l3-soft); color: var(--l3); }
+.tag-none { color: var(--muted); }
+.table-note { font-size: 0.85rem; color: var(--muted); }
+
+/* Split */
+.split { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.half {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.half ul, .handoffs ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 4px; }
+.handoffs { display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+
+/* Questions */
+.qs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.q { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 6px 24px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.q-ask { font-family: var(--font-display); font-size: 1.12rem; font-weight: 500; line-height: 1.35; }
+.q-say { color: var(--ink); }
+.q-say::before { content: "Say: "; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+
+/* Logistics */
+.facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 8px 20px; margin: 0; }
+.facts dt { font-family: var(--font-mono); font-size: 0.8rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); padding-top: 3px; }
+.facts dd { margin: 0; max-width: 65ch; }
+.team { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.team span { white-space: nowrap; }
+.team b { font-family: var(--font-mono); font-weight: 500; font-size: 0.8rem; color: var(--muted); margin-right: 4px; }
+.team .you { color: var(--accent); font-weight: 600; }
+
+footer { font-size: 0.85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; max-width: 75ch; }
+
+@media (max-width: 640px) {
+  .nets, .split { grid-template-columns: minmax(0, 1fr); }
+  .q { grid-template-columns: minmax(0, 1fr); }
+  .facts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .facts dd { margin-bottom: 10px; }
+  .part-head .eyebrow { margin-left: 0; }
+}
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">LLMs &amp; Cognition 2026 · Team 4 · Thu 12 Nov, 10:00</div>
+    <h1>Methodology Expert</h1>
+    <p class="lede">You explain how the paper ran its study, step by step, so the class understands what every table and figure shows and how it was made. You share the role with Mihnea-Andrei Velcea.</p>
+    <div class="paper">
+      <div class="eyebrow">The paper</div>
+      <a class="paper-title" href="https://arxiv.org/abs/2604.12816">The role of System 1 and System 2 semantic memory structure in human and LLM biases</a>
+      <div class="paper-meta">Katherine Abramski, Giulio Rossetti, Massimo Stella · arXiv 2604.12816 · April 2026</div>
+    </div>
+  </header>
+
+  <section aria-labelledby="builds">
+    <div class="section-head">
+      <h2 id="builds">What the paper builds</h2>
+    </div>
+    <p class="why">For humans, Mistral-7B and Llama-3.1-8B, the authors build one word network with three layers over the same ~12,000 cue words. Free associations stand for fast, intuitive System 1 memory. Definitions and category relations stand for slow, deliberate System 2 memory. Then they ask two things: can the layers be merged without losing structure, and how much gender bias does each layer carry?</p>
+
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="merge" x1="0" x2="1" y1="0" y2="0">
+          <stop offset="0" class="s-1"></stop>
+          <stop offset="1" class="s-3"></stop>
+        </linearGradient>
+      </defs>
+    </svg>
+
+    <div class="nets">
+      <div class="net">
+        <figure>
+          <svg viewBox="0 0 360 196" role="img" aria-label="Humans: three separate layers, free associations, definitions and categories, linked through the same words.">
+            <line class="link" x1="65" y1="44" x2="65" y2="164"></line>
+            <line class="link" x1="115" y1="30" x2="115" y2="150"></line>
+            <line class="link" x1="165" y1="44" x2="165" y2="164"></line>
+
+            <polygon class="pl pl-1" points="50,16 220,16 180,60 10,60"></polygon>
+            <line class="edge" x1="65" y1="44" x2="115" y2="30"></line>
+            <line class="edge" x1="115" y1="30" x2="165" y2="44"></line>
+            <line class="edge" x1="65" y1="44" x2="165" y2="44"></line>
+            <circle class="node" cx="65" cy="44" r="4.5"></circle>
+            <circle class="node" cx="115" cy="30" r="4.5"></circle>
+            <circle class="node" cx="165" cy="44" r="4.5"></circle>
+            <text class="lab" x="232" y="34">Free associations</text>
+            <text class="sub sub-1" x="232" y="50">SYSTEM 1</text>
+
+            <polygon class="pl pl-2" points="50,76 220,76 180,120 10,120"></polygon>
+            <line class="edge" x1="65" y1="104" x2="115" y2="90"></line>
+            <circle class="node" cx="65" cy="104" r="4.5"></circle>
+            <circle class="node" cx="115" cy="90" r="4.5"></circle>
+            <circle class="node" cx="165" cy="104" r="4.5"></circle>
+            <text class="lab" x="232" y="94">Definitions</text>
+            <text class="sub sub-2" x="232" y="110">SYSTEM 2</text>
+
+            <polygon class="pl pl-3" points="50,136 220,136 180,180 10,180"></polygon>
+            <line class="edge" x1="115" y1="150" x2="165" y2="164"></line>
+            <circle class="node" cx="65" cy="164" r="4.5"></circle>
+            <circle class="node" cx="115" cy="150" r="4.5"></circle>
+            <circle class="node" cx="165" cy="164" r="4.5"></circle>
+            <text class="lab" x="232" y="154">Categories</text>
+            <text class="sub sub-3" x="232" y="170">SYSTEM 2</text>
+          </svg>
+          <figcaption><strong>Humans:</strong> best kept as three separate layers. The network is irreducible.</figcaption>
+        </figure>
+      </div>
+      <div class="net">
+        <figure>
+          <svg viewBox="0 0 360 196" role="img" aria-label="Mistral and Llama 3: associations and categories merge into one layer, definitions stay separate.">
+            <line class="link" x1="65" y1="74" x2="65" y2="134"></line>
+            <line class="link" x1="115" y1="60" x2="115" y2="120"></line>
+            <line class="link" x1="165" y1="74" x2="165" y2="134"></line>
+
+            <polygon class="pl pl-m" points="50,46 220,46 180,90 10,90"></polygon>
+            <line class="edge" x1="65" y1="74" x2="115" y2="60"></line>
+            <line class="edge" x1="115" y1="60" x2="165" y2="74"></line>
+            <line class="edge" x1="65" y1="74" x2="165" y2="74"></line>
+            <circle class="node" cx="65" cy="74" r="4.5"></circle>
+            <circle class="node" cx="115" cy="60" r="4.5"></circle>
+            <circle class="node" cx="165" cy="74" r="4.5"></circle>
+            <text class="lab" x="232" y="58">Associations</text>
+            <text class="lab" x="232" y="74">+ categories</text>
+            <text class="sub sub-3" x="232" y="90">MERGED</text>
+
+            <polygon class="pl pl-2" points="50,106 220,106 180,150 10,150"></polygon>
+            <line class="edge" x1="65" y1="134" x2="115" y2="120"></line>
+            <circle class="node" cx="65" cy="134" r="4.5"></circle>
+            <circle class="node" cx="115" cy="120" r="4.5"></circle>
+            <circle class="node" cx="165" cy="134" r="4.5"></circle>
+            <text class="lab" x="232" y="124">Definitions</text>
+            <text class="sub sub-2" x="232" y="140">SYSTEM 2</text>
+          </svg>
+          <figcaption><strong>Mistral and Llama 3:</strong> associations and categories collapse into one layer. The authors read this as weak categorical knowledge.</figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="numbers" aria-label="Numbers to know">
+      <span class="num"><b>~12k</b> cue words</span>
+      <span class="num"><b>3M+</b> SWOW responses</span>
+      <span class="num"><b>3</b> networks × <b>3</b> layers</span>
+      <span class="num"><b>10</b> gender primes</span>
+      <span class="num"><b>172</b> targets</span>
+      <span class="num"><b>4</b> topics</span>
+      <span class="num"><b>1,720</b> prime–target pairs</span>
+    </div>
+  </section>
+
+  <section aria-labelledby="method">
+    <div class="section-head">
+      <h2 id="method">The method, in order</h2>
+      <p>Two parts. Part A builds the networks and tests whether their layers can merge. Part B measures gender bias in each layer.</p>
+    </div>
+
+    <div class="part">
+      <div class="part-head">
+        <h3>Part A · Build the networks</h3>
+        <span class="eyebrow">Table 2 · Figure 3</span>
+      </div>
+      <ol class="steps">
+        <li class="step">
+          <span class="step-n">1</span>
+          <div class="step-body">
+            <h3>Collect three kinds of word data for the same cue words</h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr><th>Layer</th><th>Humans</th><th>LLMs</th></tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="layer"><span class="dot dot-1"></span>Free associations</span></td>
+                    <td>SWOW (Small World of Words): ~12k cues, 3M+ responses from thousands of people</td>
+                    <td>LWOW: the same cues given to each model, following the SWOW procedure</td>
+                  </tr>
+                  <tr>
+                    <td><span class="layer"><span class="dot dot-2"></span>Definitions</span></td>
+                    <td>WordNet definitions</td>
+                    <td>The model lists each word's senses, then defines each sense</td>
+                  </tr>
+                  <tr>
+                    <td><span class="layer"><span class="dot dot-3"></span>Categories</span></td>
+                    <td>WordNet synonyms, antonyms, hyponyms, hypernyms</td>
+                    <td>The model gives the same four relations for each sense</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">2</span>
+          <div class="step-body">
+            <h3>Turn each into a network</h3>
+            <p><strong>Associations:</strong> cue linked to each response, weighted by how often people (or the model) gave it. Made undirected, keeping the larger weight when both directions exist. <strong>Definitions:</strong> cue linked to every content word in its definitions, so <em>doctor</em> links to <em>person, licensed, practice, medicine</em>. <strong>Categories:</strong> cue linked to each related word. Definitions and categories are unweighted.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">3</span>
+          <div class="step-body">
+            <h3>Clean up</h3>
+            <p>Drop words that aren't in WordNet. In the associations layer, drop links given only once (weight 1). Keep only the largest connected component. The result is Table 2.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">4</span>
+          <div class="step-body">
+            <h3>Test whether the layers can merge</h3>
+            <p>The Python package <code>multired</code> (De Domenico et al., 2015) represents each layer by its normalized Laplacian. It repeatedly merges the pair of layers that loses the least structural information and computes the relative entropy after each merge. The configuration with the highest relative entropy is the best description. That curve is Figure 3.</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="result">
+        <span class="eyebrow">Part A result</span>
+        <p>Humans are best described with all three layers kept separate. Mistral and Llama 3 are best described with associations and categories merged.</p>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <caption class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Table 2: network size per layer</caption>
+          <thead>
+            <tr><th>Table 2</th><th>Layer</th><th class="n">Nodes</th><th class="n">Edges</th><th class="n">Density</th><th class="n">Mean degree</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="3" class="item">Humans</td><td><span class="layer"><span class="dot dot-1"></span>Associations</span></td><td class="n">24,308</td><td class="n">317,344</td><td class="n">0.0011</td><td class="n">26</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-2"></span>Definitions</span></td><td class="n">16,200</td><td class="n">83,971</td><td class="n">0.0006</td><td class="n">10</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-3"></span>Categories</span></td><td class="n">34,211</td><td class="n">94,541</td><td class="n">0.0002</td><td class="n">6</td></tr>
+            <tr class="grp"><td rowspan="3" class="item">Mistral</td><td><span class="layer"><span class="dot dot-1"></span>Associations</span></td><td class="n">20,339</td><td class="n">199,103</td><td class="n">0.0010</td><td class="n">20</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-2"></span>Definitions</span></td><td class="n">16,806</td><td class="n">153,771</td><td class="n">0.0011</td><td class="n">18</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-3"></span>Categories</span></td><td class="n">26,451</td><td class="n">236,931</td><td class="n">0.0007</td><td class="n">18</td></tr>
+            <tr class="grp"><td rowspan="3" class="item">Llama 3</td><td><span class="layer"><span class="dot dot-1"></span>Associations</span></td><td class="n">38,987</td><td class="n">546,866</td><td class="n">0.0007</td><td class="n">28</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-2"></span>Definitions</span></td><td class="n">18,526</td><td class="n">214,172</td><td class="n">0.0012</td><td class="n">23</td></tr>
+            <tr><td><span class="layer"><span class="dot dot-3"></span>Categories</span></td><td class="n">27,676</td><td class="n">110,430</td><td class="n">0.0003</td><td class="n">8</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">Density = 2E / N(N−1), mean degree = 2E / N, both for undirected graphs. The values check out against these formulas.</p>
+    </div>
+
+    <div class="part">
+      <div class="part-head">
+        <h3>Part B · Measure gender bias</h3>
+        <span class="eyebrow">Table 1 · Figures 2, 4, 5 · Appendix 6–14</span>
+      </div>
+      <ol class="steps" start="5">
+        <li class="step">
+          <span class="step-n">5</span>
+          <div class="step-body">
+            <h3>Pick primes and targets</h3>
+            <p>10 primes: <em>woman, female, mother, girl, feminine</em> and <em>man, male, father, boy, masculine</em>. 172 targets in four topics (traits, home vs career, art vs science, professions), half female-stereotyped and half male-stereotyped (Table 1). That gives 1,720 prime–target pairs.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">6</span>
+          <div class="step-body">
+            <h3>Spread activation from each prime</h3>
+            <p>With the R package <code>spreadr</code> (Siew, 2019), activation starts on a prime and flows through one layer. The activation that reaches a target stands in for how quickly a person would link the two words. Settings come from the authors' earlier work:</p>
+            <div class="params">
+              <span class="num">start activation = <b>number of nodes</b></span>
+              <span class="num">steps = <b>2 × diameter</b></span>
+              <span class="num">retention = <b>0.5</b></span>
+            </div>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">7</span>
+          <div class="step-body">
+            <h3>Score the bias</h3>
+            <p>Normalize final activations to control for word frequency. Compare stereotype-consistent pairs (<em>woman–nurse, man–doctor</em>) with inconsistent ones (<em>woman–doctor, man–nurse</em>). The differences become standardized effect sizes using a paired Wilcoxon test. Positive means stereotype-consistent bias. Figure 2 illustrates the idea.</p>
+          </div>
+        </li>
+        <li class="step">
+          <span class="step-n">8</span>
+          <div class="step-body">
+            <h3>Aggregate</h3>
+            <p>Per topic, layer and gender gives Figure 4. Across all four topics gives Figure 5. The normalized activations themselves, prime by target, are the appendix heatmaps (Figures 6–14).</p>
+          </div>
+        </li>
+      </ol>
+
+      <div class="result">
+        <span class="eyebrow">Part B result</span>
+        <p>In humans, bias is consistently lower in the two System 2 layers, as the authors predicted. Mistral and Llama 3 show no consistent pattern across topics, and Llama 3 links all professions more strongly to men.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="figmap">
+    <div class="section-head">
+      <h2 id="figmap">Every figure and table</h2>
+      <p>What each one shows, how it was made, and which part it belongs to.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Shows</th><th>Made from</th><th>Part</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="item">Figure 1</td><td>The three layers and which system each stands for</td><td>Diagram, no data</td><td><span class="tag tag-none">both</span></td></tr>
+          <tr><td class="item">Table 1</td><td>The 172 target words by topic and gender</td><td>Word lists, no computation</td><td><span class="tag tag-b">B</span></td></tr>
+          <tr><td class="item">Figure 2</td><td>How a pair gets scored: <em>doctor</em> receives 0.2 from <em>woman</em>, 0.3 from <em>man</em></td><td>Illustration from the authors' 2025 paper, not a result</td><td><span class="tag tag-b">B</span></td></tr>
+          <tr><td class="item">Table 2</td><td>Nodes, edges, density and mean degree per layer</td><td>Counted on the cleaned networks</td><td><span class="tag tag-a">A</span></td></tr>
+          <tr><td class="item">Figure 3</td><td>Relative entropy at each merge step, one line per network</td><td><code>multired</code> on the three multilayer networks</td><td><span class="tag tag-a">A</span></td></tr>
+          <tr><td class="item">Figure 4</td><td>Bias effect size per topic, layer and gender, one panel per network</td><td><code>spreadr</code> activations, then Wilcoxon effect sizes</td><td><span class="tag tag-b">B</span></td></tr>
+          <tr><td class="item">Figure 5</td><td>The same effect sizes combined over the four topics</td><td>Aggregated from Figure 4's data; the method isn't stated</td><td><span class="tag tag-b">B</span></td></tr>
+          <tr><td class="item">Figures 6–14</td><td>Normalized activation heatmaps, prime × target, one per network and layer</td><td><code>spreadr</code> activations</td><td><span class="tag tag-b">B</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="split">
+    <div class="section-head">
+      <h2 id="split">Splitting it with Mihnea-Andrei</h2>
+      <p>A proposal, not yet agreed. Roles can be swapped within the team, and everyone reads the whole paper either way.</p>
+    </div>
+    <div class="split">
+      <div class="half">
+        <span class="eyebrow"><span class="tag tag-a">A</span> One of you</span>
+        <h3>Networks and reducibility</h3>
+        <ul>
+          <li>Steps 1–4</li>
+          <li>Table 2 and Figure 3</li>
+          <li>Questions 1, 5 and 6 below</li>
+        </ul>
+      </div>
+      <div class="half">
+        <span class="eyebrow"><span class="tag tag-b">B</span> The other</span>
+        <h3>Bias measurement</h3>
+        <ul>
+          <li>Steps 5–8</li>
+          <li>Table 1, Figures 2, 4, 5 and the heatmaps</li>
+          <li>Questions 2, 3 and 4 below</li>
+        </ul>
+      </div>
+    </div>
+    <div class="handoffs">
+      <ul>
+        <li><strong>Andrei Dragotă (DS)</strong> describes SWOW, LWOW and WordNet as datasets. You explain how they become networks.</li>
+        <li><strong>Călin-Cristian Axinte (CO)</strong> should know the authors released no code (“available upon request”). A demo needs an email to the authors or a rebuild with <code>multired</code> and <code>spreadr</code>.</li>
+        <li>Nobody on the team has the Challenger role, so questions about weaknesses are likely to land on the methods people.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section aria-labelledby="questions">
+    <div class="section-head">
+      <h2 id="questions">Questions to expect</h2>
+      <p>Where the methods are thin. When the paper doesn't say, say that it doesn't.</p>
+    </div>
+    <ol class="qs">
+      <li class="q">
+        <div class="q-ask">1. Is WordNet really “human” System 2 memory?</div>
+        <div class="q-say">No people produced it. It's a curated dictionary. The LLM side is the models asked to reproduce WordNet-style content, so those layers compare a reference resource with the models' recall of it.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">2. What prompts and settings made the definitions and categories?</div>
+        <div class="q-say">The paper describes two steps (list the senses, then define or relate each one) but gives no prompt text, temperature or sample count. Its Limitations section says results may partly depend on how the prompts were worded.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">3. What exactly is the “effect size” in Figures 4 and 5?</div>
+        <div class="q-say">Differences between consistent and inconsistent pairs, turned into standardized effect sizes with a paired Wilcoxon test. The paper doesn't name the statistic or say what is paired, by target or by prime.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">4. Is the drop in bias for System 2 significant?</div>
+        <div class="q-say">No p-values, confidence intervals or interaction tests are reported. The claim rests on the pattern in the figures.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">5. How solid is the reducibility result?</div>
+        <div class="q-say">One run per network, with no relative-entropy values in the text and no bootstrap. The layers also have different node counts (humans: 24,308 / 16,200 / 34,211), and the paper doesn't explain how nodes are matched across layers.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">6. Could the filtering change the results?</div>
+        <div class="q-say">Possibly. Dropping non-WordNet words removes some legitimate LLM output, and only the largest component is kept. No sensitivity check is reported.</div>
+      </li>
+      <li class="q">
+        <div class="q-ask">7. Smaller details</div>
+        <div class="q-say">“Assertive” was missing from the networks, so “assert” was used. LWOW also covers Haiku, which isn't analysed here. Models are named only as mistral-7b and llama3.1-8b, with no exact checkpoint.</div>
+      </li>
+    </ol>
+  </section>
+
+  <section aria-labelledby="logistics">
+    <div class="section-head">
+      <h2 id="logistics">Grading and logistics</h2>
+    </div>
+    <dl class="facts">
+      <dt>Points</dt>
+      <dd>2 of your 10, graded per person on a 0 / 0.5 / 1 / 1.5 / 2 scale.</dd>
+      <dt>Penalties</dt>
+      <dd>Failing a basic question about your own part costs 0.5. Missing the session loses all 2 points, with no make-up in the retake.</dd>
+      <dt>Bonus</dt>
+      <dd>Extra points for building the joint slides or leading the discussion.</dd>
+      <dt>Upload</dt>
+      <dd>Slides and code go in Semester Presentations on Teams. As of 2 Nov there was no Team 4 folder; earlier teams used “Team N - Paper title”.</dd>
+      <dt>Team 4</dt>
+      <dd class="team">
+        <span><b>PF</b>Alexandru Zotec</span>
+        <span class="you"><b>ME</b>Bogdan Gherghina (you)</span>
+        <span><b>ME</b>Mihnea-Andrei Velcea</span>
+        <span><b>CO</b>Călin-Cristian Axinte</span>
+        <span><b>DS</b>Andrei Dragotă</span>
+        <span><b>R</b>Elena Larisa Vieriu</span>
+      </dd>
+    </dl>
+  </section>
+
+  <footer>
+    <p>Paper read from the arXiv HTML (v1) on 8 Nov 2026. The figure images weren't viewed, so figure descriptions come from captions and the results text. Check any wording against the paper before putting it on a slide.</p>
+    <p>Course details from Teams and the Organization &amp; Scheduling doc, 2 Nov 2026. See the <a href="https://claude.ai/artifact/JRQr1GKXkD8YnHT9JeH7A8">LLMs &amp; Cognition 2026</a> course brief.</p>
+  </footer>
+
+</div>

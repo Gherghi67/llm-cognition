@@ -43,5 +43,9 @@ Thumbs.db
 *.swo
 *~
 
-# Python virtualenv for the labs (uv venv --python 3.12 .venv)
+# Python / Jupyter (course labs)
 .venv/
+__pycache__/
+.ipynb_checkpoints/
+# Downloaded by lab notebooks at runtime
+the-verdict.txt
