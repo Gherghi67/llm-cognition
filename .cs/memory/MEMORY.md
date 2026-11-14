@@ -1,2 +1,6 @@
 - [Session narrative — bogdan-gherghina-erepubliklabs-com (lab notebook)](narrative.bogdan-gherghina-erepubliklabs-com.md): looser-bar work-in-progress; its owner reads it in full on resume, anyone else only the lines the resume digest names; older sections under .cs/narrative-archive/
-- [Reading Teams via chrome-mine](reference_teams-via-chrome-mine.md) — unibuc Teams is scraped in the user's own Chrome through the chrome-mine MCP; no Graph/app registration
+- [Reading Teams via chrome-mine](reference_teams-via-chrome-mine.md) — unibuc Teams (and claude.ai docs the docs connector refuses) are read in the user's own Chrome through the chrome-mine MCP; no Graph/app registration
+- [Course writing style](feedback_course-writing-style.md) — course deliverables must read as the user’s own (plain titles, terse first-person notes); the project report’s no-LLM + disclosure rule still applies
+- [Bash grep is ugrep](project_bash-grep-is-ugrep.md) — `.{0,N}` context patterns fail ("exceeds complexity limits"); use python re for match context
+- [The user's "ADHD skill"](reference_i-have-adhd-skill.md) — means skills.sh ayghri/i-have-adhd; not installed, read SKILL.md via gh api
+- [Course project: transformer layers](project_course-project-transformer-layers.md) — Painters-paper project report, its ADHD copy and code links; submit the original, never the LLM copy
