@@ -10,4 +10,4 @@ COPY --chown=root:root examples/example.json ./examples/example.json
 RUN chmod -R a+rX /app
 USER 10001:10001
 EXPOSE 8786
-CMD ["python", "server.py", "--bind", "0.0.0.0", "--port", "8786", "--db", "/data/layer-atlas.sqlite3", "--allowed-host", "macbook-pro-2.tailaedfae.ts.net"]
+CMD ["python", "server.py", "--bind", "0.0.0.0", "--port", "8786", "--db", "/data/layer-atlas.sqlite3", "--trust-proxy-identity", "--allowed-host", "macbook-pro-2.tailaedfae.ts.net"]

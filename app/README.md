@@ -7,14 +7,20 @@ A workbench for the Transformer Layers and Attention-Head Similarity course proj
 Run these commands from the repository root with Docker Desktop running:
 
 ```sh
-docker compose -f app/compose.yaml up -d --build --wait
+python3 app/manage.py deploy
 ```
 
 Open <http://127.0.0.1:8786> or the private Tailscale URL below. SQLite lives in the Docker volume `layer-atlas_results`, not in the source checkout. Do not use `docker compose down -v` on the live project: that deletes the database volume.
 
 The Python app runs as UID 10001 with a read-only root filesystem, no Linux capabilities, no new privileges, 1 CPU, 512 MiB RAM and 64 processes/threads. Only `/data` is persistent and writable; `/tmp` is bounded scratch space. The app is on an internal Docker network with no outbound internet route. It has no home-directory, Docker-socket or source-checkout mounts.
 
-A separate non-root Nginx gateway publishes only `127.0.0.1:8786`. It has no database or host mounts, a read-only filesystem, a 0.5 CPU / 192 MiB / 32-process limit, and bounded temporary storage. It applies a shared 20 requests/second limit (burst 60), 16 simultaneous requests, a 25 MiB upload limit and request timeouts. HTTP 429 means wait briefly and retry. The gateway has outbound networking; isolation is not a guarantee against every container/runtime vulnerability. Keep Docker Desktop and the pinned base images updated.
+The Nginx gateway publishes only `127.0.0.1:8786`. It has no database or host mounts, a read-only filesystem, a 0.5 CPU / 192 MiB / 32-process limit, and bounded temporary storage. It applies a shared 20 requests/second limit (burst 60), 16 simultaneous requests, a 25 MiB upload limit and request timeouts. HTTP 429 means wait briefly and retry.
+
+Before listening, the gateway installs an IPv4/IPv6 output firewall in its own network namespace. New connections are limited to the backend's reserved IPv4 address on TCP8786, Docker DNS and local health checks; replies and IPv6 neighbor discovery are also permitted. Other output is rejected, including connections to the Mac's other services. Docker DNS forwarding remains allowed, so this is not complete outbound data isolation.
+
+Bootstrap briefly has root plus NET_ADMIN/SETUID/SETGID/SETPCAP. It then drops to UID/GID101, clears supplementary groups and every capability set, and verifies the kernel state before starting Nginx. Nginx is PID1; there is no root init process. Health commands use the same privilege guard. A failed firewall or privilege setup prevents listening. Docker configuration still starts bootstrap as root, so owner-issued `docker exec` commands default to those bootstrap privileges; use `/usr/local/bin/unprivileged.sh` for probes that represent Nginx's privileges.
+
+`manage.py` adopts or creates the project's internal network, reserves the backend address, and writes private settings to `app/data/networks/layer-atlas.env`. It preserves the address of an existing backend and revalidates network ownership and internal isolation on each maintenance run. A recreated network gets fresh settings from Docker IPAM. Compose uses this managed network as external, so ordinary `compose down` leaves it in place. The firewall is restored by the image entrypoint on every gateway start. Isolation is not a guarantee against container/runtime vulnerabilities; keep Docker Desktop and the pinned base images updated.
 
 For local development without Docker, use `python3 app/server.py --port 18786 --db /tmp/layer-atlas-dev.sqlite3`. Its default bind address remains loopback. The `--bind 0.0.0.0` option is for the isolated container only.
 
@@ -30,7 +36,7 @@ The saved tailnet policy permits external shared users (`autogroup:shared`) only
 
 To give teammates access, share this machine individually through the Tailscale Machines page. Have them accept using their own account and connect their Tailscale client. Use **device sharing**, not an invitation to join your tailnet: tailnet members have broader access under the current policy. The saved rules have been validated by Tailscale; access from an external teammate's device still needs an end-to-end check. Revisit the destination addresses if this Mac is removed and re-enrolled.
 
-Anyone with app access can download all results, import results, edit notes/tasks and delete runs. The app has no per-user roles or audit history. Network restrictions do not prevent an authorized user from deleting data.
+Anyone with app access can download all results, import results, edit notes/tasks and delete runs. The app has no per-user roles. Activity history records actions and identity as described below. Network restrictions do not prevent an authorized user from deleting data.
 
 ### Installed service on this Mac
 
@@ -44,18 +50,18 @@ Inspect the service and app:
 
 ```sh
 launchctl print gui/501/com.gherghina.layer-atlas
-docker compose -f app/compose.yaml ps
-docker compose -f app/compose.yaml logs --tail 50
+docker compose --env-file app/data/networks/layer-atlas.env -f app/compose.yaml ps
+docker compose --env-file app/data/networks/layer-atlas.env -f app/compose.yaml logs --tail 50
 tailscale serve status
 ```
 
-After changing source, rebuild with `docker compose -f app/compose.yaml up -d --build --wait`. Restarting alone does not copy source changes into an image. Host maintenance errors are in `app/data/maintenance-error.log`; backup events are in `app/data/maintenance.log`. Container logs are capped at three 5 MiB files per container.
+After changing source, rebuild with `python3 app/manage.py deploy`. This prepares network settings, refreshes the backup for an existing running app, builds, and starts the services. Restarting alone does not copy source changes into an image. `python3 app/manage.py prepare` regenerates network settings without starting services. Host maintenance errors are in `app/data/maintenance-error.log`; backup events are in `app/data/maintenance.log`. Container logs are capped at three 5 MiB files per container.
 
 To stop the app persistently, unload maintenance first, then stop containers:
 
 ```sh
 launchctl bootout gui/501 ~/Library/LaunchAgents/com.gherghina.layer-atlas.plist
-docker compose -f app/compose.yaml stop
+docker compose --env-file app/data/networks/layer-atlas.env -f app/compose.yaml stop
 ```
 
 Start it again with `launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.gherghina.layer-atlas.plist`. To stop only remote serving, use `tailscale serve --https=8443 off`.
@@ -72,7 +78,23 @@ python3 app/manage.py backup
 
 A pre-migration database snapshot and the old LaunchAgent plist are retained under `app/data/`. The old `app/data/layer-atlas.sqlite3` is an inactive pre-Docker copy, not the live database.
 
-To restore a daily snapshot, first make a current backup, copy the selected snapshot to a separate file, unload maintenance, and stop both containers with the commands above. Verify the selected file with `manage.verify_backup(Path(...))`. With the app stopped, use a one-off `docker compose run --rm -T --no-deps atlas` process to replace `/data/layer-atlas.sqlite3` from that file and remove its stale `-wal` and `-shm` files. Start the containers and check results before reloading maintenance. The disposable container acceptance test exercises this exact recovery sequence, including restoration of deleted notes/results and changed tasks.
+To restore a daily snapshot, first make a current backup, copy the selected snapshot to a separate file, unload maintenance, and stop both containers with the commands above. Verify the selected file with `manage.verify_backup(Path(...))`. With the app stopped, use a one-off `docker compose --env-file app/data/networks/layer-atlas.env -f app/compose.yaml run --rm -T --no-deps atlas` process to replace `/data/layer-atlas.sqlite3` from that file and remove its stale `-wal` and `-shm` files. Start the containers and check results before reloading maintenance. The disposable container acceptance test exercises this exact recovery sequence, including restoration of deleted notes/results and changed tasks.
+
+## Activity logging
+
+Open **Activity** to see who imported, viewed, downloaded or deleted a result, edited notes, changed a task, compared maps or exported a PNG. Entries include UTC timestamps (displayed in your browser’s timezone), identity source, result/task identifiers and relevant change details. The newest 100 entries load first; **Load older activity** pages backward and **Refresh** fetches new events. Failed requests include their HTTP status. Note contents, matrices, cookies and request bodies are excluded from logs. Notes entries record revision changes and character counts; task entries record the previous and new completion state.
+
+Activity is stored in the existing SQLite volume and included in database backups. Successful imports, edits and deletions commit together with their activity entry; if recording fails, the change rolls back. Deleting a result preserves its history. There is no app route to delete history. History starts with this update; earlier actions cannot be reconstructed. Database history currently has no automatic expiry.
+
+The Docker app enables `--trust-proxy-identity` for the private gateway: remote requests use the `Tailscale-User-Login` supplied by [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve#identity-headers). Keep the backend private and the gateway published on loopback. Local processes that can reach the gateway are trusted and can supply these headers; do not put another public proxy in front of it without stripping client identity headers. Direct development servers ignore these headers by default. Tagged devices may have no user identity.
+
+Without a Tailscale identity, use **Your name for local activity**. The name is stored in an HttpOnly, SameSite cookie and explicitly labeled **self-reported**, not authenticated. Visitors without either identity appear as **Unknown visitor**. Browser actions (view navigation, comparisons and PNG exports) are also self-reported, while imports, note edits, task changes, JSON/CSV downloads and deletions are recorded by the server. Browser telemetry does not confirm that a download was saved to disk. Everyone with app access can read history, including teammates’ Tailscale login names. This adds attribution, not authorization or tamper resistance against host/database administrators.
+
+Each non-health HTTP request also emits a JSON container log with identity, method, path (without query), status, request ID and processing time. The same request ID links it to database history and the `X-Request-ID` response header. Health probes are omitted. Container log rotation retains the existing three 5 MiB files:
+
+```sh
+docker compose --env-file app/data/networks/layer-atlas.env -f app/compose.yaml logs -f atlas
+```
 
 ## Import from Colab
 
@@ -131,7 +153,11 @@ node --check app/static/app.js
 Docker acceptance uses a separate disposable project and port; it never touches the live volume:
 
 ```sh
-LAYER_ATLAS_PORT=18786 docker compose -p layer-atlas-verify -f app/compose.yaml up -d --no-build --wait
+python3 app/manage.py prepare --project layer-atlas-verify
+LAYER_ATLAS_PORT=18786 docker compose --env-file app/data/networks/layer-atlas-verify.env -p layer-atlas-verify -f app/compose.yaml up -d --no-build --wait
 python3 app/tests/container_acceptance.py
-docker compose -p layer-atlas-verify -f app/compose.yaml down -v
+docker compose --env-file app/data/networks/layer-atlas-verify.env -p layer-atlas-verify -f app/compose.yaml down -v
+docker network rm layer-atlas-verify_isolated
 ```
+
+The broader firewall verification runner in `app/experiments/gateway-egress/` builds separately tagged images from the production gateway files and checks positive controls, IPv4/IPv6 blocking, privilege state, restart/recreation, and failed startup. Its README gives the ordered actions and cleanup procedure.

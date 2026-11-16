@@ -169,6 +169,7 @@ function heatmap(run, matrix = run.matrix, difference = false) {
       link.href = URL.createObjectURL(blob);
       link.download = `${difference ? 'difference-a-minus-b' : 'similarity-map'}${run.demo ? '-synthetic-demo' : ''}.png`;
       link.click();
+      track('png.export', {name: run.name, id: run.id, difference, demo: Boolean(run.demo)});
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
     }, 'image/png');
   });
@@ -287,6 +288,7 @@ async function renderComparison() {
   try {
     const [a, b] = await Promise.all([loadRun($('#compare-a').value), loadRun($('#compare-b').value)]);
     if (version !== comparisonVersion) return;
+    track('maps.compare', {a: a.id, b: b.id, demo: state.demo});
     const result = compareMaps(a, b);
     const summary = element('div', 'panel comparison-summary');
     if (!result.compatible) {
@@ -366,6 +368,63 @@ function renderTasks() {
   }
 }
 
+function track(action, details) {
+  api('/api/activity', 'POST', {action, details}).catch(error => message(`Activity could not be recorded. ${error.message}`, true));
+}
+
+function showIdentity(identity) {
+  $('#identity-label').textContent = `${identity.actor} · ${identity.identity_source}`;
+  const local = identity.identity_source !== 'tailscale';
+  for (const node of $('#identity-form').querySelectorAll('label, input, button')) node.hidden = !local;
+  $('#visitor-name').required = local;
+  if (identity.identity_source === 'self-reported') $('#visitor-name').value = identity.actor;
+}
+
+let oldestActivity = null;
+let activityVersion = 0;
+async function renderActivity(older = false) {
+  const version = ++activityVersion;
+  try {
+    const events = await api(`/api/activity${older && oldestActivity ? `?before=${oldestActivity}` : ''}`);
+    if (version !== activityVersion) return;
+    const list = $('#activity-list');
+    if (!older) list.replaceChildren();
+    if (!events.length && !older) list.append(element('p', '', 'No activity recorded yet.'));
+    const labels = {'run.import': 'Imported result', 'run.view': 'Viewed result', 'run.export': 'Downloaded result', 'notes.update': 'Edited notes', 'run.delete': 'Deleted result', 'task.update': 'Changed task', 'request.failed': 'Request failed', 'identity.set': 'Set local name', 'view.open': 'Opened view', 'maps.compare': 'Compared maps', 'png.export': 'Exported PNG', 'demo.toggle': 'Changed demo mode'};
+    for (const event of events) {
+      const row = element('article', 'activity-row');
+      const time = element('time', '', new Date(event.created_at).toLocaleString());
+      time.dateTime = event.created_at;
+      row.append(time, element('strong', '', `${event.actor} · ${event.identity_source}`), element('span', '', labels[event.action] || event.action));
+      const details = {...event.details};
+      delete details.browser_reported;
+      let description = details.name || details.title || '';
+      if (event.action === 'task.update') description += ` · ${details.before ? 'Complete' : 'Pending'} → ${details.done ? 'Complete' : 'Pending'}`;
+      if (event.action === 'notes.update') description += ` · Revision ${details.from_revision} → ${details.revision} · ${details.characters} characters`;
+      if (event.action === 'run.export') description += ` · ${details.format === 'matrix.csv' ? 'CSV' : 'JSON'}`;
+      if (event.action === 'request.failed') description = `${details.method} ${event.target} · HTTP ${details.status}`;
+      if (event.action === 'maps.compare') description = `${details.a} ↔ ${details.b}${details.demo ? ' · Demo' : ''}`;
+      if (event.action === 'view.open') description = details.view;
+      if (event.action === 'demo.toggle') description = details.enabled ? 'Demo enabled' : 'Demo disabled';
+      if (event.action === 'png.export' && details.difference) description += ' · Difference A − B';
+      const detail = element('span', 'activity-detail', description);
+      detail.title = `Reference: ${event.target} · Request: ${event.request_id}`;
+      row.append(detail);
+      list.append(row);
+    }
+    if (events.length) oldestActivity = events.at(-1).id;
+    $('#older-activity').hidden = events.length < 100;
+  } catch (error) { message(`Could not load activity. ${error.message}`, true); }
+}
+
+$('#identity-form').addEventListener('submit', async event => {
+  event.preventDefault();
+  try { showIdentity(await api('/api/me', 'POST', {name: $('#visitor-name').value})); }
+  catch (error) { message(error.message, true); }
+});
+$('#refresh-activity').addEventListener('click', () => renderActivity());
+$('#older-activity').addEventListener('click', () => renderActivity(true));
+
 for (const button of document.querySelectorAll('[data-view]')) {
   button.addEventListener('click', () => {
     state.view = button.dataset.view;
@@ -373,12 +432,14 @@ for (const button of document.querySelectorAll('[data-view]')) {
       tab.classList.toggle('active', tab === button);
       tab.setAttribute('aria-pressed', String(tab === button));
     }
-    for (const view of ['maps', 'compare', 'tasks']) $(`#${view}-view`).hidden = view !== state.view;
-    $('#view-title').textContent = {maps: 'Explore representations', compare: 'Compare similarity maps', tasks: 'The road to 03 December'}[state.view];
+    for (const view of ['maps', 'compare', 'tasks', 'activity']) $(`#${view}-view`).hidden = view !== state.view;
+    $('#view-title').textContent = {maps: 'Explore representations', compare: 'Compare similarity maps', tasks: 'The road to 03 December', activity: 'Who did what'}[state.view];
     if (state.view === 'compare') renderComparison();
+    track('view.open', {view: state.view});
+    if (state.view === 'activity') renderActivity();
   });
 }
-$('#demo-toggle').addEventListener('click', () => { state.demo = !state.demo; state.selected = null; message(''); renderCollection(); });
+$('#demo-toggle').addEventListener('click', () => { state.demo = !state.demo; state.selected = null; message(''); track('demo.toggle', {enabled: state.demo}); renderCollection(); });
 $('#search').addEventListener('input', refreshLibrary);
 $('#kind-filter').addEventListener('change', refreshLibrary);
 $('#compare-a').addEventListener('change', renderComparison);
@@ -413,6 +474,8 @@ try {
   [state.runs, state.tasks] = await Promise.all([api('/api/runs'), api('/api/tasks')]);
   renderCollection();
   renderTasks();
+  showIdentity(await api('/api/me'));
+  track('view.open', {view: 'maps'});
 } catch (error) {
   message(`Could not load the workbench. ${error.message}`, true);
 }

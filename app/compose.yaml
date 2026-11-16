@@ -17,7 +17,9 @@ services:
       - results:/data
     tmpfs:
       - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
-    networks: [isolated]
+    networks:
+      isolated:
+        ipv4_address: ${LAYER_ATLAS_BACKEND_IPV4:?Run python3 app/manage.py prepare first}
     healthcheck:
       test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8786/api/health', timeout=3).read()"]
       interval: 30s
@@ -33,13 +35,16 @@ services:
     build:
       context: gateway
     image: layer-atlas-gateway:local
-    entrypoint: [nginx, -g, "daemon off;"]
-    user: "101:101"
-    init: true
+    entrypoint: [/usr/local/bin/start.sh]
+    user: "0:0"
+    init: false
     restart: unless-stopped
     read_only: true
     cap_drop: [ALL]
+    cap_add: [NET_ADMIN, SETUID, SETGID, SETPCAP]
     security_opt: [no-new-privileges:true]
+    environment:
+      ATLAS_IPV4: ${LAYER_ATLAS_BACKEND_IPV4:?Run python3 app/manage.py prepare first}
     cpus: 0.5
     mem_limit: 192m
     memswap_limit: 192m
@@ -53,7 +58,7 @@ services:
       atlas:
         condition: service_healthy
     healthcheck:
-      test: [CMD, wget, -q, -O, /dev/null, "http://127.0.0.1:8786/api/health"]
+      test: [CMD, /usr/local/bin/unprivileged.sh, wget, -q, -O, /dev/null, "http://127.0.0.1:8786/api/health"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -66,6 +71,7 @@ services:
 networks:
   ingress:
   isolated:
-    internal: true
+    external: true
+    name: ${LAYER_ATLAS_NETWORK_NAME:?Run python3 app/manage.py prepare first}
 volumes:
   results:

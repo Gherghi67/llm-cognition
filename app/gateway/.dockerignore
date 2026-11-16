@@ -1,3 +1,6 @@
 **
 !nginx.conf
 !Dockerfile
+!start.sh
+!unprivileged.sh
+!verify-unprivileged.sh

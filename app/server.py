@@ -5,6 +5,9 @@ import argparse
 from contextlib import closing, contextmanager
 import csv
 from datetime import datetime, timezone
+from http.cookies import CookieError, SimpleCookie
+import logging
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
@@ -12,8 +15,10 @@ import math
 from pathlib import Path
 import re
 import sqlite3
-from urllib.parse import urlsplit
+from urllib.parse import quote, unquote, urlsplit, parse_qs
 import uuid
+
+LOGGER = logging.getLogger("layer_atlas")
 
 ROOT = Path(__file__).resolve().parent
 MAX_BODY = 25 * 1024 * 1024
@@ -112,6 +117,11 @@ def initialize(db_path):
         db.execute("PRAGMA journal_mode=WAL")
         db.execute("CREATE TABLE IF NOT EXISTS runs (id TEXT PRIMARY KEY, created_at TEXT NOT NULL, revision INTEGER NOT NULL, payload TEXT NOT NULL)")
         db.execute("CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY, title TEXT NOT NULL, due TEXT NOT NULL, done INTEGER NOT NULL DEFAULT 0)")
+        db.execute("""CREATE TABLE IF NOT EXISTS activity (
+            id INTEGER PRIMARY KEY AUTOINCREMENT, created_at TEXT NOT NULL,
+            actor TEXT NOT NULL, identity_source TEXT NOT NULL, action TEXT NOT NULL,
+            target TEXT NOT NULL, details TEXT NOT NULL, request_id TEXT NOT NULL)
+        """)
         db.executemany("INSERT OR IGNORE INTO tasks(id,title,due) VALUES(?,?,?)", [(i, title, due) for i, (title, due) in enumerate(TASKS, 1)])
 
 
@@ -125,11 +135,55 @@ def unpack(row):
 class Handler(BaseHTTPRequestHandler):
     server_version = "LayerAtlas/1"
 
+    def identity(self):
+        if self.server.trust_proxy_identity:
+            login = self.headers.get("Tailscale-User-Login", "").strip()
+            if login and len(login) <= 320 and not any(ord(c) < 32 for c in login):
+                return {"actor": login, "identity_source": "tailscale"}
+        cookie = SimpleCookie()
+        try:
+            cookie.load(self.headers.get("Cookie", ""))
+            name = unquote(cookie["atlas_name"].value).strip() if "atlas_name" in cookie else ""
+        except (ValueError, KeyError, CookieError):
+            name = ""
+        if name and len(name) <= 80 and not any(ord(c) < 32 for c in name):
+            return {"actor": name, "identity_source": "self-reported"}
+        return {"actor": "Unknown visitor", "identity_source": "unknown"}
+
+    def record_activity(self, db, action, target, details):
+        db.execute("""INSERT INTO activity(created_at,actor,identity_source,action,target,details,request_id)
+                      VALUES(?,?,?,?,?,?,?)""", (
+            datetime.now(timezone.utc).isoformat(), self.actor["actor"],
+            self.actor["identity_source"], action, str(target),
+            json.dumps(details, ensure_ascii=False), self.request_id))
+
+    def log_message(self, format, *args):
+        # send_bytes emits structured request records.
+        pass
+
+    def log_response(self, status):
+        path = urlsplit(self.path).path
+        if path != "/api/health":
+            record = {"created_at": datetime.now(timezone.utc).isoformat(), "request_id": self.request_id,
+                      **self.actor, "method": self.command, "path": path[:512],
+                      "status": status, "duration_ms": round((time.monotonic() - self.started) * 1000, 2)}
+            LOGGER.info(json.dumps(record, ensure_ascii=True))
+            if status >= 400:
+                try:
+                    with self.db_connection() as db:
+                        self.record_activity(db, "request.failed", path[:512], {"method": self.command, "status": status})
+                except Exception:
+                    LOGGER.exception("Could not persist failed request: %s", self.request_id)
+
     def send_bytes(self, status, body, content_type="application/json; charset=utf-8", filename=None):
+        self.log_response(status)
         self.send_response(status)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("X-Request-ID", self.request_id)
+        if getattr(self, "identity_cookie", None):
+            self.send_header("Set-Cookie", self.identity_cookie)
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Referrer-Policy", "same-origin")
         self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
@@ -186,7 +240,43 @@ class Handler(BaseHTTPRequestHandler):
             file_path = ROOT / ("examples" if filename == "example.json" else "static") / filename
             content_type = {".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".css": "text/css", ".json": "application/json"}[file_path.suffix]
             return self.send_bytes(200, file_path.read_bytes(), content_type + "; charset=utf-8")
+        if path == "/api/me" and self.command == "GET":
+            return self.send_json(200, self.actor)
         with self.db_connection() as db:
+            if path == "/api/me" and self.command == "POST":
+                value = self.json_body()
+                name = value.get("name")
+                if not isinstance(name, str) or not name.strip() or len(name.strip()) > 80 or any(ord(c) < 32 for c in name):
+                    raise RequestError(400, "Use a name of 1–80 characters.")
+                self.identity_cookie = f"atlas_name={quote(name.strip(), safe='')}; Path=/; HttpOnly; SameSite=Strict; Max-Age=31536000"
+                if self.headers.get("Host", "").split(":")[0] not in ("localhost", "127.0.0.1"):
+                    self.identity_cookie += "; Secure"
+                if self.actor["identity_source"] != "tailscale":
+                    self.actor = {"actor": name.strip(), "identity_source": "self-reported"}
+                self.record_activity(db, "identity.set", "", {})
+                db.commit()
+                return self.send_json(200, self.actor)
+            if path == "/api/activity" and self.command == "POST":
+                value = self.json_body()
+                if value.get("action") not in ("view.open", "maps.compare", "png.export", "demo.toggle"):
+                    raise RequestError(400, "Unknown browser action.")
+                details = value.get("details", {})
+                if not isinstance(details, dict) or len(json.dumps(details)) > 1000:
+                    raise RequestError(400, "Browser action details must be an object up to 1000 characters.")
+                self.record_activity(db, value["action"], "browser", {**details, "browser_reported": True})
+                db.commit()
+                return self.send_json(201, {"ok": True})
+            if path == "/api/activity" and self.command == "GET":
+                try:
+                    before = int(parse_qs(urlsplit(self.path).query).get("before", [str(2**63 - 1)])[0])
+                    if not 0 < before <= 2**63 - 1:
+                        raise ValueError()
+                except ValueError:
+                    raise RequestError(400, "before must be a positive activity ID.")
+                rows = [dict(row) for row in db.execute("SELECT * FROM activity WHERE id < ? ORDER BY id DESC LIMIT 100", (before,))]
+                for event in rows:
+                    event["details"] = json.loads(event["details"])
+                return self.send_json(200, rows)
             if path == "/api/runs":
                 if self.command == "GET":
                     runs = [unpack(row) for row in db.execute("SELECT * FROM runs ORDER BY created_at DESC")]
@@ -199,6 +289,7 @@ class Handler(BaseHTTPRequestHandler):
                     created = datetime.now(timezone.utc).isoformat()
                     db.execute("INSERT INTO runs VALUES(?,?,?,?)", (identifier, created, 1, json.dumps(payload, allow_nan=False)))
                     row = db.execute("SELECT * FROM runs WHERE id=?", (identifier,)).fetchone()
+                    self.record_activity(db, "run.import", identifier, {"name": payload["name"], "model": payload["model"]})
                     db.commit()
                     return self.send_json(201, unpack(row))
             if path == "/api/tasks" and self.command == "GET":
@@ -211,10 +302,13 @@ class Handler(BaseHTTPRequestHandler):
                 value = self.json_body()
                 if type(value.get("done")) is not bool:
                     raise RequestError(400, "done must be true or false.")
+                db.execute("BEGIN IMMEDIATE")
+                previous = db.execute("SELECT done FROM tasks WHERE id=?", (int(task_match[1]),)).fetchone()
                 cursor = db.execute("UPDATE tasks SET done=? WHERE id=?", (value["done"], int(task_match[1])))
                 if not cursor.rowcount:
                     raise RequestError(404, "Task not found.")
                 row = dict(db.execute("SELECT * FROM tasks WHERE id=?", (int(task_match[1]),)).fetchone())
+                self.record_activity(db, "task.update", task_match[1], {"title": row["title"], "before": bool(previous[0]), "done": value["done"]})
                 db.commit()
                 row["done"] = bool(row["done"])
                 return self.send_json(200, row)
@@ -226,6 +320,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise RequestError(404, "Run not found.")
                 run = unpack(row)
                 if self.command == "GET":
+                    self.record_activity(db, "run.export" if download else "run.view", identifier, {"name": run["name"], "format": download})
+                    db.commit()
                     if download == "export.json":
                         payload = json.loads(row["payload"])
                         return self.send_bytes(200, json.dumps(payload, ensure_ascii=False, indent=2).encode(), filename="layer-atlas-run.json")
@@ -248,16 +344,21 @@ class Handler(BaseHTTPRequestHandler):
                     if not cursor.rowcount:
                         raise RequestError(409, "Notes changed in another session. Reload the run before saving again.")
                     updated = db.execute("SELECT * FROM runs WHERE id=?", (identifier,)).fetchone()
+                    self.record_activity(db, "notes.update", identifier, {"name": run["name"], "from_revision": run["revision"], "revision": run["revision"] + 1, "characters": len(value["notes"])})
                     db.commit()
                     return self.send_json(200, unpack(updated))
                 if self.command == "DELETE":
                     self.json_body()
+                    self.record_activity(db, "run.delete", identifier, {"name": run["name"]})
                     db.execute("DELETE FROM runs WHERE id=?", (identifier,))
                     db.commit()
                     return self.send_json(200, {"deleted": identifier})
         raise RequestError(404, "Page or API route not found.")
 
     def handle_request(self):
+        self.request_id = str(uuid.uuid4())
+        self.actor = self.identity()
+        self.started = time.monotonic()
         try:
             try:
                 host = urlsplit("//" + self.headers.get("Host", "")).hostname
@@ -273,8 +374,7 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
         except Exception:
-            import traceback
-            traceback.print_exc()
+            LOGGER.exception("Request failed: %s", self.request_id)
             self.send_json(500, {"error": "The request failed. Check the server log."})
 
     do_GET = handle_request
@@ -289,10 +389,11 @@ class RequestError(Exception):
         self.status = status
 
 
-def make_server(port=8786, db_path=None, allowed_hosts=(), bind="127.0.0.1"):
+def make_server(port=8786, db_path=None, allowed_hosts=(), bind="127.0.0.1", trust_proxy_identity=False):
     db_path = str(db_path or ROOT / "data" / "layer-atlas.sqlite3")
     initialize(db_path)
     server = ThreadingHTTPServer((bind, port), Handler)
+    server.trust_proxy_identity = trust_proxy_identity
     server.db_path = db_path
     server.allowed_hosts = {"127.0.0.1", "localhost", *allowed_hosts}
     return server
@@ -304,8 +405,10 @@ if __name__ == "__main__":
     parser.add_argument("--bind", default="127.0.0.1", help="Listen address; use 0.0.0.0 only inside the isolated container")
     parser.add_argument("--db", type=Path, default=ROOT / "data" / "layer-atlas.sqlite3")
     parser.add_argument("--allowed-host", action="append", default=[], help="Additional reverse-proxy hostname, without scheme or port")
+    parser.add_argument("--trust-proxy-identity", action="store_true", help="Trust Tailscale identity headers; only behind the private Serve gateway")
     args = parser.parse_args()
-    server = make_server(args.port, args.db, args.allowed_host, args.bind)
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    server = make_server(args.port, args.db, args.allowed_host, args.bind, args.trust_proxy_identity)
     print(f"Layer Atlas serving at http://{args.bind}:{server.server_port}", flush=True)
     try:
         server.serve_forever()

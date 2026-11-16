@@ -1,4 +1,4 @@
-"""Exercise only the disposable layer-atlas-verify Compose project on port 18786."""
+"""Exercise only a disposable verification Compose project on port 18786."""
 
 from contextlib import closing
 import http.client
@@ -14,7 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("manage", ROOT / "manage.py")
 manage = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(manage)
-COMPOSE = [manage.DOCKER, "compose", "-p", "layer-atlas-verify", "-f", str(ROOT / "compose.yaml")]
+PROJECT = os.environ.get("LAYER_ATLAS_VERIFY_PROJECT", "layer-atlas-verify")
+assert PROJECT in {"layer-atlas-verify", "layer-atlas-egress-verify"}
+COMPOSE = manage.compose_command(PROJECT)
+if os.environ.get("LAYER_ATLAS_VERIFY_CONFIG"):
+    COMPOSE = [manage.DOCKER, "compose", "-p", PROJECT, "-f", os.environ["LAYER_ATLAS_VERIFY_CONFIG"]]
 ENV = {**os.environ, "LAYER_ATLAS_PORT": "18786"}
 
 
@@ -34,6 +38,7 @@ def request(method, path, payload=None, headers=None):
 
 identifier = command("ps", "-q", "atlas", capture_output=True, text=True).stdout.strip()
 details = json.loads(subprocess.check_output([manage.DOCKER, "inspect", identifier]))[0]
+assert details["Config"]["Labels"]["com.docker.compose.project"] == PROJECT
 host = details["HostConfig"]
 assert details["Config"]["User"] == "10001:10001"
 assert host["ReadonlyRootfs"] and host["CapDrop"] == ["ALL"]
@@ -42,13 +47,29 @@ assert host["Memory"] == host["MemorySwap"] == 512 * 1024**2
 assert host["NanoCpus"] == 10**9 and host["PidsLimit"] == 64
 assert not host["PortBindings"]
 assert len(details["Mounts"]) == 1 and details["Mounts"][0]["Type"] == "volume"
-network = json.loads(subprocess.check_output([manage.DOCKER, "network", "inspect", "layer-atlas-verify_isolated"]))[0]
+assert details["Mounts"][0]["Name"] == PROJECT + "_results"
+network = json.loads(subprocess.check_output([manage.DOCKER, "network", "inspect", PROJECT + "_isolated"]))[0]
 assert network["Internal"]
 gateway_id = command("ps", "-q", "gateway", capture_output=True, text=True).stdout.strip()
 gateway = json.loads(subprocess.check_output([manage.DOCKER, "inspect", gateway_id]))[0]
+assert gateway["Config"]["Labels"]["com.docker.compose.project"] == PROJECT
 assert gateway["HostConfig"]["PortBindings"]["8786/tcp"] == [{"HostIp": "127.0.0.1", "HostPort": "18786"}]
-assert gateway["Config"]["User"] == "101:101" and not gateway["Mounts"]
+assert gateway["Config"]["User"] == "0:0" and not gateway["Mounts"]
 assert gateway["HostConfig"]["ReadonlyRootfs"] and gateway["HostConfig"]["CapDrop"] == ["ALL"]
+assert not gateway["HostConfig"]["Init"]
+assert set(gateway["HostConfig"]["CapAdd"]) == {"CAP_NET_ADMIN", "CAP_SETUID", "CAP_SETGID", "CAP_SETPCAP"}
+assert gateway["Config"]["Healthcheck"]["Test"][:2] == ["CMD", "/usr/local/bin/unprivileged.sh"]
+children = command("exec", "-T", "gateway", "cat", "/proc/1/task/1/children", capture_output=True, text=True).stdout.split()
+assert children
+for pid in ["1", *children]:
+    status = command("exec", "-T", "gateway", "cat", f"/proc/{pid}/status", capture_output=True, text=True).stdout
+    fields = dict(line.split(":", 1) for line in status.splitlines())
+    assert fields["Name"].strip() == "nginx"
+    assert fields["Uid"].split() == fields["Gid"].split() == ["101"] * 4
+    assert all(int(fields[key].strip(), 16) == 0 for key in ["CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb"])
+    assert fields["NoNewPrivs"].strip() == "1"
+command("exec", "-T", "gateway", "/usr/local/bin/unprivileged.sh", "sh", "-c",
+        "if nft list table inet atlas_egress 2>/dev/null; then exit 1; fi")
 isolation = """
 import os, pathlib, socket
 assert os.getuid() == 10001
@@ -73,6 +94,8 @@ print('PASS: non-root, read-only, capabilities removed, no host mounts, outbound
 """
 command("exec", "-T", "atlas", "python", "-c", isolation)
 assert request("GET", "/api/health")[0] == 200
+identity = json.loads(request("GET", "/api/me", headers={"Tailscale-User-Login": "container-test@example.com"})[1])
+assert identity == {"actor": "container-test@example.com", "identity_source": "tailscale"}
 assert request("GET", "/")[0] == 200
 assert request("GET", "/api/health", headers={"Host": "bad.example"})[0] == 403
 assert request("GET", "/data/layer-atlas.sqlite3")[0] == 404
@@ -96,7 +119,12 @@ with tempfile.TemporaryDirectory() as directory:
     with closing(sqlite3.connect(snapshot)) as db:
         assert db.execute("SELECT done FROM tasks WHERE id=1").fetchone() == (1,)
         assert "Docker restore fixture" in db.execute("SELECT payload FROM runs WHERE id=?", (run["id"],)).fetchone()[0]
+    history = json.loads(request("GET", "/api/activity")[1])
+    assert any(event["action"] == "run.import" and event["target"] == run["id"] for event in history)
+    with closing(sqlite3.connect(snapshot)) as db:
+        assert db.execute("SELECT count(*) FROM activity").fetchone()[0] > 0
     assert request("DELETE", path, {})[0] == 200
+    assert any(event["action"] == "run.delete" and event["target"] == run["id"] for event in json.loads(request("GET", "/api/activity")[1]))
     assert request("PATCH", "/api/tasks/1", {"done": False})[0] == 200
     command("stop", "atlas")
     restore = """
@@ -111,4 +139,7 @@ Path('/data/layer-atlas.sqlite3').write_bytes(sys.stdin.buffer.read())
     command("up", "-d", "--no-build", "--wait", "--wait-timeout", "45")
     assert json.loads(request("GET", path)[1])["notes"] == "Docker restore fixture"
     assert json.loads(request("GET", "/api/tasks")[1])[0]["done"] is True
+    restored = json.loads(request("GET", "/api/activity")[1])
+    assert any(event["action"] == "notes.update" and event["target"] == run["id"] for event in restored)
+    assert not any(event["action"] == "run.delete" and event["target"] == run["id"] for event in restored)
 print("PASS: imports, notes, exports, host/origin checks, daily backup and recovery after deletion and restart")
